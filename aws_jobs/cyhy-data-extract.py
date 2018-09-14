@@ -117,7 +117,7 @@ def main():
 
     # Check if OUTPUT_DIR exists; if not, bail out
     if not os.path.exists(OUTPUT_DIR):
-        print "ERROR: Output directory '{!s}' does not exist - exiting!".format(OUTPUT_DIR)
+        print("ERROR: Output directory '{!s}' does not exist - exiting!".format(OUTPUT_DIR))
         sys.exit(1)
 
     # create_dummy_files(OUTPUT_DIR)
@@ -146,7 +146,7 @@ def main():
                                 (db.vuln_scans, {'owner':{'$in':orgs}, 'time':{'$gte':yesterday, '$lt':today}}),
                                 (db.hosts, {'owner':{'$in':orgs}, 'last_change':{'$gte':yesterday, '$lt':today}}),
                                 (db.tickets, {'owner':{'$in':orgs}, 'last_change':{'$gte':yesterday, '$lt':today}})]:
-        print "Fetching from", collection.name, "collection...",
+        print("Fetching from", collection.name, "collection...")
         # data = list(collection.find(query, {'key':False}).limit(100))      # For testing
         data = list(collection.find(query, {'key':False}))
 
@@ -158,7 +158,8 @@ def main():
         tarinfo.size = len(json_data)
         tarinfo.mtime = now_unix
         tbz_file.addfile(tarinfo, cStringIO.StringIO(json_data))
-        print " Added {!s} to {!s}".format(json_filename, tbz_filename)
+        print(" Added {!s} to {!s}".format(json_filename, tbz_filename))
+
 
     tbz_file.close()
     mem_file.seek(0)    # Be kind, rewind
