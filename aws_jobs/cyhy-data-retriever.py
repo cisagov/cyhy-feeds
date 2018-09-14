@@ -22,18 +22,17 @@ Options:
 
 import sys
 import re
-from docopt import docopt
-import dateutil.tz as tz
+from configparser import SafeConfigParser
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-import gnupg    # Requires installation of GPG 2.1 (e.g. port install gnupg21) and 'python-gnupg' package (e.g. pip install python-gnupg)
-import tarfile
-import subprocess
-from configparser import SafeConfigParser
-
-#for AWS stuff
+from docopt import docopt
 import boto3
 import botocore
+import dateutil.tz as tz
+import gnupg    # Requires installation of GPG 2.1 (e.g. port install gnupg21) and 'python-gnupg' package (e.g. pip install python-gnupg)
+import subprocess
+import tarfile
+
 BUCKET_NAME = 'ncats-moe-data'
 DOMAIN = 'ncats-moe-data'
 FILE_NAME = 'all_the_data.tbz.gpg'

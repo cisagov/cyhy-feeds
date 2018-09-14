@@ -20,20 +20,20 @@ Options:
 
 import sys
 import re
-from docopt import docopt
+from ConfigParser import SafeConfigParser
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from docopt import docopt
+import boto3
+import cStringIO
+import gnupg    # pip install python-gnupg
+import os
+import subprocess
+import tarfile
+import time
 from cyhy.db import database
 from cyhy.util import util
-import gnupg    # pip install python-gnupg
-import time
-import tarfile
-import cStringIO
-import subprocess
-import os
-from ConfigParser import SafeConfigParser
-# These are used in the egress to s3
-import boto3
-from datetime import datetime
+
 BUCKET_NAME = 'ncats-moe-data'
 DOMAIN = 'ncats-moe-data'
 HEADER = ''
@@ -62,6 +62,7 @@ def create_dummy_files(output_dir):
         # Set file modification time to n days earlier than it was
         os.utime(full_path_dummy_filename, (st.st_atime, st.st_mtime - (86400 * n)))        # 86400 seconds per day
 
+
 def cleanup_old_files(output_dir, file_retention_num_days):
     ''' Deletes *.gpg files older than file_retention_num_days in the specified output_dir'''
     now_unix = time.time()
@@ -82,11 +83,11 @@ def cleanup_bucket_files(aws_access_key_id, aws_secret_access_key):
         aws_secret_access_key=aws_secret_access_key
     )
 
-
     if(len(s3.list_objects(Bucket=BUCKET_NAME)['Contents']) > MAX_ENTRIES):
         for key in s3.list_objects(Bucket=BUCKET_NAME)['Contents']:
             print(key)
             print(key['LastModified'])
+
 
 def main():
     global __doc__
@@ -166,7 +167,7 @@ def main():
     encrypted_signed_data = gpg.encrypt_file(mem_file, RECIPIENTS, armor=False, sign=SIGNER, passphrase=SIGNER_PASSPHRASE)
 
     if not encrypted_signed_data.ok:
-        print "\nFAILURE - GPG ERROR!\n GPG status: {!s} \n GPG stderr:\n{!s}".format(encrypted_signed_data.status, encrypted_signed_data.stderr)
+        print("\nFAILURE - GPG ERROR!\n GPG status: {!s} \n GPG stderr:\n{!s}".format(encrypted_signed_data.status, encrypted_signed_data.stderr))
         sys.exit(-1)
 
     # Output the compressed, encrypted, signed file as a .gpg
@@ -186,13 +187,13 @@ def main():
     else:
         output_file.write(encrypted_signed_data.data)
         output_file.close()
-    print "Encrypted, signed, compressed JSON data written to file: {!s}".format(gpg_full_path_filename)
+    print("Encrypted, signed, compressed JSON data written to file: {!s}".format(gpg_full_path_filename))
 
 
 
     cleanup_old_files(OUTPUT_DIR, FILE_RETENTION_NUM_DAYS)
 
-    print "\nSUCCESS!"
+    print("\nSUCCESS!")
 
 if __name__=='__main__':
     main()
