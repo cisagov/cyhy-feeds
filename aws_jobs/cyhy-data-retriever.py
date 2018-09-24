@@ -2,7 +2,7 @@
 
 '''Retrieve a compressed, encrypted, signed extract file and verify/decrypt/uncompress it.
    NOTES:
-   * curl must be installed in order to make the https request to get the extract file
+   * the python modules below must be installed for the script to work
    * This script expects to operate on a GPG-encrypted bzip2 tar file: e.g. filename.tbz.gpg
 
 Usage:
@@ -26,16 +26,15 @@ from configparser import SafeConfigParser
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from docopt import docopt
-import boto3
-import botocore
+import boto3        # pip install boto3
+import botocore     # pip install botorcore
 import dateutil.tz as tz
-import gnupg    # Requires installation of GPG 2.1 (e.g. port install gnupg21) and 'python-gnupg' package (e.g. pip install python-gnupg)
+import gnupg        # Requires installation of GPG 2.1 (e.g. port install gnupg21) and 'python-gnupg' package (e.g. pip install python-gnupg)
 import subprocess
 import tarfile
 
 BUCKET_NAME = 'ncats-moe-data'
 DOMAIN = 'ncats-moe-data'
-FILE_NAME = 'all_the_data.tbz.gpg'
 
 def main():
     global __doc__

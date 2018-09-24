@@ -40,7 +40,7 @@ HEADER = ''
 MAX_ENTRIES = 1
 
 
-def update_bucket(bucket_name, bucket_contents, local_file, remote_file_name, aws_access_key_id, aws_secret_access_key):
+def update_bucket(bucket_name, local_file, remote_file_name, aws_access_key_id, aws_secret_access_key):
     '''update the s3 bucket with the new contents'''
 
     s3 = boto3.client(
@@ -182,8 +182,7 @@ def main():
         output_file.close()
 
         # send the contents to the s3 bucket
-        update_bucket(BUCKET_NAME, bucket_contents, gpg_full_path_filename, gpg_file_name, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-
+        update_bucket(BUCKET_NAME, gpg_full_path_filename, gpg_file_name, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
         print('Upload to AWS bucket complete')
     else:
         output_file.write(encrypted_signed_data.data)
