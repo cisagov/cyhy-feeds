@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # standard python libraries
-from datetime import datetime, time, timezone, timedelta
+from datetime import datetime, timezone, timedelta
 import json
 import logging
 import re
