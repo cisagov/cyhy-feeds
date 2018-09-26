@@ -1,5 +1,3 @@
-#!/usr/bin/env python2
-
 # standard python libraries
 from datetime import datetime, timedelta
 import json
