@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 
 # standard python libraries
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 import json
 import logging
 import re
@@ -66,7 +66,7 @@ def query_elasticsearch(session, es_region, es_url, since,
                             {
                                 'range': {
                                     'report_metadata.date_range.begin': {
-                                        'gte': since
+                                        'gte': (since - datetime(1970,1,1)).total_seconds()
                                     }
                                 }
                             }
@@ -164,7 +164,7 @@ def get_dmarc_data(aws_access_key_id, aws_secret_access_key,
     requests.exceptions.RequestException: If an error is returned
     by Elasticsearch.
     """
-    since = datetime.now(timezone.utc) - timedelta(days=days)
+    since = datetime.utcnow() - timedelta(days=days)
 
     logging.info('Creating AWS session')
     session = boto3.Session(aws_access_key_id=aws_access_key_id,
