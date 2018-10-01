@@ -18,29 +18,37 @@ Options:
 
 '''
 
-import sys
+import datetime
+import json
+import logging
 import re
+import sys
 from ConfigParser import SafeConfigParser
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from docopt import docopt
+from requests_aws4auth import AWS4Auth
 import boto3
 import cStringIO
 import gnupg    # pip install python-gnupg
 import os
+import requests
 import subprocess
 import tarfile
 import time
 from cyhy.db import database
 from cyhy.util import util
+from dmarc import get_dmarc_data
 
 BUCKET_NAME = 'ncats-moe-data'
 DOMAIN = 'ncats-moe-data'
 HEADER = ''
 MAX_ENTRIES = 1
+DEFAULT_ES_RETRIEVE_SIZE = 10000
+DAYS_OF_DMARC_REPORTS = 1
 
 
-def update_bucket(bucket_name, bucket_contents, local_file, remote_file_name, aws_access_key_id, aws_secret_access_key):
+def update_bucket(bucket_name, local_file, remote_file_name, aws_access_key_id, aws_secret_access_key):
     '''update the s3 bucket with the new contents'''
 
     s3 = boto3.client(
@@ -113,6 +121,11 @@ def main():
     FILE_RETENTION_NUM_DAYS = int(config.get('DEFAULT', 'FILE_RETENTION_NUM_DAYS'))  # Files older than this are deleted by cleanup_old_files()
     AWS_ACCESS_KEY_ID = config.get('DEFAULT', 'AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = config.get('DEFAULT', 'AWS_SECRET_ACCESS_KEY')
+    DMARC_AWS_ACCESS_KEY_ID = config.get('DMARC', 'AWS_ACCESS_KEY_ID')
+    DMARC_AWS_SECRET_ACCESS_KEY = config.get('DMARC', 'AWS_SECRET_ACCESS_KEY')
+    ES_REGION = config.get('DMARC', 'ES_REGION')
+    ES_URL = config.get('DMARC', 'ES_URL')
+    ES_RETRIEVE_SIZE = config.get('DMARC', 'ES_RETRIEVE_SIZE')
 
 
     # Check if OUTPUT_DIR exists; if not, bail out
@@ -147,7 +160,7 @@ def main():
                                 (db.hosts, {'owner':{'$in':orgs}, 'last_change':{'$gte':yesterday, '$lt':today}}),
                                 (db.tickets, {'owner':{'$in':orgs}, 'last_change':{'$gte':yesterday, '$lt':today}})]:
         print("Fetching from", collection.name, "collection...")
-        # data = list(collection.find(query, {'key':False}).limit(100))      # For testing
+        # data = list(collection.find(query, {'key':False}).limit(10))      # For testing
         data = list(collection.find(query, {'key':False}))
 
         json_data = util.to_json(data)
@@ -160,7 +173,13 @@ def main():
         tbz_file.addfile(tarinfo, cStringIO.StringIO(json_data))
         print(" Added {!s} to {!s}".format(json_filename, tbz_filename))
 
-
+    json_data = util.to_json(get_dmarc_data(DMARC_AWS_ACCESS_KEY_ID, DMARC_AWS_SECRET_ACCESS_KEY,
+                                ES_REGION, ES_URL, DAYS_OF_DMARC_REPORTS, ES_RETRIEVE_SIZE))
+    json_filename = '{!s}_{!s}.json'.format("DMARC", today.isoformat().replace(':','').split('.')[0])
+    tarinfo = tarfile.TarInfo(json_filename)
+    tarinfo.size = len(json_data)
+    tarinfo.mtime = now_unix
+    tbz_file.addfile(tarinfo, cStringIO.StringIO(json_data))
     tbz_file.close()
     mem_file.seek(0)    # Be kind, rewind
 
@@ -182,8 +201,7 @@ def main():
         output_file.close()
 
         # send the contents to the s3 bucket
-        update_bucket(BUCKET_NAME, bucket_contents, gpg_full_path_filename, gpg_file_name, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-
+        update_bucket(BUCKET_NAME, gpg_full_path_filename, gpg_file_name, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
         print('Upload to AWS bucket complete')
     else:
         output_file.write(encrypted_signed_data.data)
