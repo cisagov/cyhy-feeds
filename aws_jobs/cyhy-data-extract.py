@@ -164,8 +164,11 @@ def main():
         print("Finished writing ", collection.name, " to file.")
         tbz_file.add(json_filename)
         print(" Added {!s} to {!s}".format(json_filename, tbz_filename))
+        # Delete file once added to tar
+        if os.path.exists(json_filename):
+            os.remove(json_filename)
+            print("Deleted ", json_filename, " as part of cleanup.")
 
-    print(" Added {!s} to {!s}".format(json_filename, tbz_filename))
     json_data = util.to_json(get_dmarc_data(DMARC_AWS_ACCESS_KEY_ID, DMARC_AWS_SECRET_ACCESS_KEY,
                                     ES_REGION, ES_URL, DAYS_OF_DMARC_REPORTS, ES_RETRIEVE_SIZE))
     json_filename = '{!s}_{!s}.json'.format("DMARC", today.isoformat().replace(':','').split('.')[0])
@@ -173,6 +176,9 @@ def main():
     dmarc_file.write(json_data)
     tbz_file.add(json_filename)
     tbz_file.close()
+    if os.path.exists(json_filename):
+        os.remove(json_filename)
+        print("Deleted ", json_filename, " as part of cleanup.")
 
     gpg_file_name = tbz_filename + '.gpg'
     gpg_full_path_filename = os.path.join(OUTPUT_DIR, gpg_file_name)
@@ -181,7 +187,7 @@ def main():
         status = gpg.encrypt_file(f, RECIPIENTS, armor=False, sign=SIGNER, passphrase=SIGNER_PASSPHRASE, output=gpg_full_path_filename)
 
     if not status.ok:
-        print("\nFAILURE - GPG ERROR!\n GPG status: {!s} \n GPG stderr:\n{!s}".format(encrypted_signed_data.status, encrypted_signed_data.stderr))
+        print("\nFAILURE - GPG ERROR!\n GPG status: {!s} \n GPG stderr:\n{!s}".format(status.status, status.stderr))
         sys.exit(-1)
 
     if args['--aws']:
