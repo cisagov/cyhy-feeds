@@ -127,13 +127,10 @@ def main():
     ES_URL = config.get('DMARC', 'ES_URL')
     ES_RETRIEVE_SIZE = config.get('DMARC', 'ES_RETRIEVE_SIZE')
 
-
     # Check if OUTPUT_DIR exists; if not, bail out
     if not os.path.exists(OUTPUT_DIR):
         print("ERROR: Output directory '{!s}' does not exist - exiting!".format(OUTPUT_DIR))
         sys.exit(1)
-
-    # create_dummy_files(OUTPUT_DIR)
 
     # Set up GPG (used for encrypting and signing)
     gpg = gnupg.GPG(gpgbinary='gpg2', gnupghome=GNUPG_HOME, verbose=args['--verbose'], options=['--pinentry-mode', 'loopback', '-u', SIGNER])
@@ -149,10 +146,9 @@ def main():
         all_orgs = db.RequestDoc.get_all_descendants('ROOT')
         orgs = list(set(all_orgs) - ORGS_EXCLUDED)
 
-    # Create tar/bzip2 file (in memory only) for writing
+    # Create tar/bzip2 file for writing
     tbz_filename = 'cyhy_extract_{!s}.tbz'.format(today.isoformat().replace(':','').split('.')[0])
-    mem_file = cStringIO.StringIO()
-    tbz_file = tarfile.open(mode='w:bz2', fileobj=mem_file)
+    tbz_file = tarfile.open(tbz_filename, mode="w:bz2")
 
     for (collection, query) in [(db.host_scans, {'owner':{'$in':orgs}, 'time':{'$gte':yesterday, '$lt':today}}),
                                 (db.port_scans, {'owner':{'$in':orgs}, 'time':{'$gte':yesterday, '$lt':today}}),
@@ -160,55 +156,45 @@ def main():
                                 (db.hosts, {'owner':{'$in':orgs}, 'last_change':{'$gte':yesterday, '$lt':today}}),
                                 (db.tickets, {'owner':{'$in':orgs}, 'last_change':{'$gte':yesterday, '$lt':today}})]:
         print("Fetching from", collection.name, "collection...")
-        # data = list(collection.find(query, {'key':False}).limit(10))      # For testing
-        data = list(collection.find(query, {'key':False}))
-
-        json_data = util.to_json(data)
         json_filename = '{!s}_{!s}.json'.format(collection.name, today.isoformat().replace(':','').split('.')[0])
-
-        # Build up tarinfo object for json file, then add it to the .tbz archive
-        tarinfo = tarfile.TarInfo(json_filename)
-        tarinfo.size = len(json_data)
-        tarinfo.mtime = now_unix
-        tbz_file.addfile(tarinfo, cStringIO.StringIO(json_data))
+        collection_file = open(json_filename,"w")
+        collection_file.write(util.to_json(list(collection.find(query, {'key':False}))))
+        # collection_file.write(util.to_json(list(collection.find(query, {'key':False}).limit(10)))) # For testing
+        collection_file.close()
+        print("Finished writing ", collection.name, " to file.")
+        tbz_file.add(json_filename)
         print(" Added {!s} to {!s}".format(json_filename, tbz_filename))
+        # Delete file once added to tar
+        if os.path.exists(json_filename):
+            os.remove(json_filename)
+            print("Deleted ", json_filename, " as part of cleanup.")
 
     json_data = util.to_json(get_dmarc_data(DMARC_AWS_ACCESS_KEY_ID, DMARC_AWS_SECRET_ACCESS_KEY,
-                                ES_REGION, ES_URL, DAYS_OF_DMARC_REPORTS, ES_RETRIEVE_SIZE))
+                                    ES_REGION, ES_URL, DAYS_OF_DMARC_REPORTS, ES_RETRIEVE_SIZE))
     json_filename = '{!s}_{!s}.json'.format("DMARC", today.isoformat().replace(':','').split('.')[0])
-    tarinfo = tarfile.TarInfo(json_filename)
-    tarinfo.size = len(json_data)
-    tarinfo.mtime = now_unix
-    tbz_file.addfile(tarinfo, cStringIO.StringIO(json_data))
+    dmarc_file = open(json_filename,"w")
+    dmarc_file.write(json_data)
+    tbz_file.add(json_filename)
     tbz_file.close()
-    mem_file.seek(0)    # Be kind, rewind
+    if os.path.exists(json_filename):
+        os.remove(json_filename)
+        print("Deleted ", json_filename, " as part of cleanup.")
 
-    # Encrypt (with public keys for all RECIPIENTS) & sign (with SIGNER's private key)
-    encrypted_signed_data = gpg.encrypt_file(mem_file, RECIPIENTS, armor=False, sign=SIGNER, passphrase=SIGNER_PASSPHRASE)
-
-    if not encrypted_signed_data.ok:
-        print("\nFAILURE - GPG ERROR!\n GPG status: {!s} \n GPG stderr:\n{!s}".format(encrypted_signed_data.status, encrypted_signed_data.stderr))
-        sys.exit(-1)
-
-    # Output the compressed, encrypted, signed file as a .gpg
     gpg_file_name = tbz_filename + '.gpg'
     gpg_full_path_filename = os.path.join(OUTPUT_DIR, gpg_file_name)
-    output_file = open(gpg_full_path_filename, 'wb')
+    # Encrypt (with public keys for all RECIPIENTS) & sign (with SIGNER's private key)
+    with open(tbz_filename, 'rb') as f:
+        status = gpg.encrypt_file(f, RECIPIENTS, armor=False, sign=SIGNER, passphrase=SIGNER_PASSPHRASE, output=gpg_full_path_filename)
+
+    if not status.ok:
+        print("\nFAILURE - GPG ERROR!\n GPG status: {!s} \n GPG stderr:\n{!s}".format(status.status, status.stderr))
+        sys.exit(-1)
 
     if args['--aws']:
-        bucket_contents = encrypted_signed_data.data
-        output_file.write(encrypted_signed_data.data)
-        output_file.close()
-
         # send the contents to the s3 bucket
         update_bucket(BUCKET_NAME, gpg_full_path_filename, gpg_file_name, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
         print('Upload to AWS bucket complete')
-    else:
-        output_file.write(encrypted_signed_data.data)
-        output_file.close()
     print("Encrypted, signed, compressed JSON data written to file: {!s}".format(gpg_full_path_filename))
-
-
 
     cleanup_old_files(OUTPUT_DIR, FILE_RETENTION_NUM_DAYS)
 
