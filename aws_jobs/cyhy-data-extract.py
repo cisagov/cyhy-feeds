@@ -3,7 +3,7 @@
 '''Create compressed, encrypted, signed extract file with Federal CyHy data for integration with the Weathermap project.
 
 Usage:
-  COMMAND_NAME [--section SECTION] [-v | --verbose] [-f | --federal] [-a | --aws] --config CONFIG_FILE
+  COMMAND_NAME [--section SECTION] [-v | --verbose] [-f | --federal] [-a | --aws] --config CONFIG_FILE [--date DATE]
   COMMAND_NAME (-h | --help)
   COMMAND_NAME --version
 
@@ -15,6 +15,7 @@ Options:
   -f --federal                          Returns only Federal requestDocs
   -a --aws                              Output results to s3 bucket
   -c CONFIG_FILE --config=CONFIG_FILE   Configuration file for this script
+  -d DATE --date=DATE                   Specific date to export data from in form: %Y-%m-%d (eg. 2018-12-31)
 
 '''
 
@@ -136,8 +137,13 @@ def main():
     gpg = gnupg.GPG(gpgbinary='gpg2', gnupghome=GNUPG_HOME, verbose=args['--verbose'], options=['--pinentry-mode', 'loopback', '-u', SIGNER])
     gpg.encoding = 'utf-8'
 
-    yesterday = now + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
-    today = yesterday + relativedelta(days=1)
+    if args['--date']:
+        date_of_data = datetime.strptime(args['--date'], '%Y-%m-%d')
+        start_of_data_collection = date_of_data + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
+        end_of_data_collection = start_of_data_collection + relativedelta(days=1)
+    else:
+        start_of_data_collection = now + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
+        end_of_data_collection = start_of_data_collection + relativedelta(days=1)
 
     if args['--federal']:
         all_fed_descendants = db.RequestDoc.get_all_descendants('FEDERAL')
@@ -147,16 +153,16 @@ def main():
         orgs = list(set(all_orgs) - ORGS_EXCLUDED)
 
     # Create tar/bzip2 file for writing
-    tbz_filename = 'cyhy_extract_{!s}.tbz'.format(today.isoformat().replace(':','').split('.')[0])
+    tbz_filename = 'cyhy_extract_{!s}.tbz'.format(end_of_data_collection.isoformat().replace(':','').split('.')[0])
     tbz_file = tarfile.open(tbz_filename, mode="w:bz2")
 
-    for (collection, query) in [(db.host_scans, {'owner':{'$in':orgs}, 'time':{'$gte':yesterday, '$lt':today}}),
-                                (db.port_scans, {'owner':{'$in':orgs}, 'time':{'$gte':yesterday, '$lt':today}}),
-                                (db.vuln_scans, {'owner':{'$in':orgs}, 'time':{'$gte':yesterday, '$lt':today}}),
-                                (db.hosts, {'owner':{'$in':orgs}, 'last_change':{'$gte':yesterday, '$lt':today}}),
-                                (db.tickets, {'owner':{'$in':orgs}, 'last_change':{'$gte':yesterday, '$lt':today}})]:
+    for (collection, query) in [(db.host_scans, {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
+                                (db.port_scans, {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
+                                (db.vuln_scans, {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
+                                (db.hosts, {'owner':{'$in':orgs}, 'last_change':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
+                                (db.tickets, {'owner':{'$in':orgs}, 'last_change':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}})]:
         print("Fetching from", collection.name, "collection...")
-        json_filename = '{!s}_{!s}.json'.format(collection.name, today.isoformat().replace(':','').split('.')[0])
+        json_filename = '{!s}_{!s}.json'.format(collection.name, end_of_data_collection.isoformat().replace(':','').split('.')[0])
         collection_file = open(json_filename,"w")
         collection_file.write(util.to_json(list(collection.find(query, {'key':False}))))
         # collection_file.write(util.to_json(list(collection.find(query, {'key':False}).limit(10)))) # For testing
@@ -171,7 +177,7 @@ def main():
 
     json_data = util.to_json(get_dmarc_data(DMARC_AWS_ACCESS_KEY_ID, DMARC_AWS_SECRET_ACCESS_KEY,
                                     ES_REGION, ES_URL, DAYS_OF_DMARC_REPORTS, ES_RETRIEVE_SIZE))
-    json_filename = '{!s}_{!s}.json'.format("DMARC", today.isoformat().replace(':','').split('.')[0])
+    json_filename = '{!s}_{!s}.json'.format("DMARC", end_of_data_collection.isoformat().replace(':','').split('.')[0])
     dmarc_file = open(json_filename,"w")
     dmarc_file.write(json_data)
     tbz_file.add(json_filename)
