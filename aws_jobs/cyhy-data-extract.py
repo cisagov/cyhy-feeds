@@ -33,6 +33,7 @@ import boto3
 import cStringIO
 import gnupg    # pip install python-gnupg
 import os
+from pytz import timezone
 import requests
 import subprocess
 import tarfile
@@ -139,7 +140,7 @@ def main():
 
     if args['--date']:
         date_of_data = datetime.strptime(args['--date'], '%Y-%m-%d')
-        start_of_data_collection = date_of_data + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
+        start_of_data_collection = timezone('UTC').localize(date_of_data) + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
         end_of_data_collection = start_of_data_collection + relativedelta(days=1)
     else:
         start_of_data_collection = now + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
