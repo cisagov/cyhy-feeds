@@ -15,7 +15,7 @@ Options:
   -f --federal                          Returns only Federal requestDocs
   -a --aws                              Output results to s3 bucket
   -c CONFIG_FILE --config=CONFIG_FILE   Configuration file for this script
-  -d DATE --date=DATE                   Specific date to export data from in form: %Y-%m-%d (eg. 2018-12-31)
+  -d DATE --date=DATE                   Specific date to export data from in form: %Y-%m-%d (eg. 2018-12-31) NOTE that this date is in UTC
 
 '''
 
@@ -139,6 +139,7 @@ def main():
     gpg.encoding = 'utf-8'
 
     if args['--date']:
+        # Note this date is in UTC timezone
         date_of_data = datetime.strptime(args['--date'], '%Y-%m-%d')
         start_of_data_collection = timezone('UTC').localize(date_of_data) + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
         end_of_data_collection = start_of_data_collection + relativedelta(days=1)
@@ -202,6 +203,10 @@ def main():
         update_bucket(BUCKET_NAME, gpg_full_path_filename, gpg_file_name, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
         print('Upload to AWS bucket complete')
     print("Encrypted, signed, compressed JSON data written to file: {!s}".format(gpg_full_path_filename))
+
+    if os.path.exists(tbz_filename):
+        os.remove(tbz_filename)
+        print("Deleted ", tbz_filename, " as part of cleanup.")
 
     cleanup_old_files(OUTPUT_DIR, FILE_RETENTION_NUM_DAYS)
 
