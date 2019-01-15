@@ -3,7 +3,7 @@
 '''Create compressed, encrypted, signed extract file with Federal CyHy data for integration with the Weathermap project.
 
 Usage:
-  COMMAND_NAME [--cyhy_section CYHY_SECTION] [--bod_section BOD_SECTION][-v | --verbose] [-f | --federal] [-a | --aws] --config CONFIG_FILE [--date DATE]
+  COMMAND_NAME [--cyhy_section CYHY_SECTION] [--bod_section BOD_SECTION] [-v | --verbose] [-f | --federal] [-a | --aws] --config CONFIG_FILE [--date DATE]
   COMMAND_NAME (-h | --help)
   COMMAND_NAME --version
 
