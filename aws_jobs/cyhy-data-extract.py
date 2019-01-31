@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-
 '''Create compressed, encrypted, signed extract file with Federal CyHy data for integration with the Weathermap project.
 
 Usage:
-  COMMAND_NAME [--cyhy_section SECTION] [--bod_section BOD_SECTION][-v | --verbose] [-f | --federal] [-a | --aws] --config CONFIG_FILE [--date DATE]
+  COMMAND_NAME [--cyhy_section CYHY_SECTION] [--bod_section BOD_SECTION][-v | --verbose] [-f | --federal] [-a | --aws] --config CONFIG_FILE [--date DATE]
   COMMAND_NAME (-h | --help)
   COMMAND_NAME --version
 
@@ -49,7 +48,7 @@ HEADER = ''
 MAX_ENTRIES = 10
 DEFAULT_ES_RETRIEVE_SIZE = 10000
 DAYS_OF_DMARC_REPORTS = 1
-
+PAGE_SIZE = 100000 # Number of documents per query
 
 def update_bucket(bucket_name, local_file, remote_file_name, aws_access_key_id, aws_secret_access_key):
     '''update the s3 bucket with the new contents'''
@@ -171,9 +170,19 @@ def main():
         print("Fetching from", collection.name, "collection...")
         json_filename = '{!s}_{!s}.json'.format(collection.name, end_of_data_collection.isoformat().replace(':','').split('.')[0])
         collection_file = open(json_filename,"w")
-        collection_file.write(util.to_json(list(collection.find(query, {'key':False}))))
-        # collection_file.write(util.to_json(list(collection.find(query, {'key':False}).limit(10)))) # For testing
+        skips = 0 # How many documents in to a query that will be skipped
+        count = collection.find(query, {'key':False}).count() # Number of documents in a query
+        while(skips < count):
+            collection_file.write(util.to_json(list(collection.find(query, {'key':False}).skip(skips).limit(PAGE_SIZE)))) # Pull documents between n and n + 100000
+            skips += PAGE_SIZE
         collection_file.close()
+        if(count > PAGE_SIZE):
+            # The first sed removes the ][ created by chunking the queries then the 2nd sed adds , to the document at the end of a chunked list
+            os.system('sed -i "/\]\[/d" %s ; sed -i "s/\}$/\}\,/g" %s ; ' % (json_filename, json_filename)) # If on MAC you will need gsed and gawk
+            # The previous sed will leave a }, at the last document in the list which is removed with this aws_access_key_id
+            os.system('''awk 'NR==FNR{tgt=NR-1;next} (FNR==tgt) && /\},/ { $1="    }" } 1' %s %s > %s.bak''' % (json_filename, json_filename, json_filename))
+            # This is a workaround for inplace
+            os.system('mv %s.bak %s' % (json_filename, json_filename))
         print("Finished writing ", collection.name, " to file.")
         tbz_file.add(json_filename)
         print(" Added {!s} to {!s}".format(json_filename, tbz_filename))
