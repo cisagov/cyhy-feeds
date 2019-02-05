@@ -172,11 +172,11 @@ def main():
         collection_file = open(json_filename,"w")
         skips = 0 # How many documents in to a query that will be skipped
         count = collection.find(query, {'key':False}).count() # Number of documents in a query
-        while(skips < count):
+        while skips < count:
             collection_file.write(util.to_json(list(collection.find(query, {'key':False}).skip(skips).limit(PAGE_SIZE)))) # Pull documents between n and n + 100000
             skips += PAGE_SIZE
         collection_file.close()
-        if(count > PAGE_SIZE):
+        if count > PAGE_SIZE:
             # The first sed removes the ][ created by chunking the queries then the 2nd sed adds , to the document at the end of a chunked list
             os.system('sed -i "/\]\[/d" %s ; sed -i "s/\}$/\}\,/g" %s ; ' % (json_filename, json_filename)) # If on MAC you will need gsed and gawk
             # The previous sed will leave a }, at the last document in the list which is removed with this aws_access_key_id
