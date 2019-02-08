@@ -166,7 +166,8 @@ def main():
                                 (cyhy_db.tickets, {'owner':{'$in':orgs}, 'last_change':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
                                 (bod_db.https_scan, {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
                                 (bod_db.sslyze_scan, {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
-                                (bod_db.trustymail , {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}})]:
+                                (bod_db.trustymail, {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
+                                (bod_db.certs, {'sct_or_not_before':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}})]:
         print("Fetching from", collection.name, "collection...")
         json_filename = '{!s}_{!s}.json'.format(collection.name, end_of_data_collection.isoformat().replace(':','').split('.')[0])
         collection_file = open(json_filename,"w")
