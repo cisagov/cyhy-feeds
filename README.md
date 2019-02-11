@@ -1,6 +1,6 @@
 # Cyhy-feeds :inbox_tray: :outbox_tray:
 
-cyhy-feeds consists of two parts; the extractor and the receiver
+cyhy-feeds consists of two parts; the extractor and the retriever
 
 `cyhy-data-extract` compresses the data, signs the compressed file, encrypts the file, and pushes
 the encrypted compressed file to a bucket in S3 using AWS creds.
