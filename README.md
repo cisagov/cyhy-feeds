@@ -1,6 +1,6 @@
-# Cyhy-feeds :inbox_tray: :outbox_tray:#
+# Cyhy-feeds :inbox_tray: :outbox_tray:
 
-`cyhy-feeds` consists of two parts; the extract and the retriever
+cyhy-feeds consists of two parts; the extract and the retriever
 
 `cyhy-data-extract` compresses the data, signs the compressed file, encrypts the file, and pushes
 the encrypted compressed file to a bucket in S3 using AWS creds.
@@ -9,9 +9,9 @@ the encrypted compressed file to a bucket in S3 using AWS creds.
 
 ## Getting Started ##
 
-`cyhy-data-extract` requires **Python 2** because it uses cyhy-core which is written in Python2. Python 3 is not supported.
+`cyhy-data-extract` requires **Python 2** because it uses cyhy-core which is written in Python2. Python 3 is not supported at this time.
 
-`cyhy-data-extract` can run as either Python2 of p=Python3.
+`cyhy-data-extract` can run as either Python2 or Python3.
 
 To run the tool locally first install the requirements:
 ```bash
