@@ -1,6 +1,6 @@
 # Cyhy-feeds :inbox_tray: :outbox_tray:
 
-cyhy-feeds consists of two parts; the extract and the retriever
+cyhy-feeds consists of two parts; the extractor and the receiver
 
 `cyhy-data-extract` compresses the data, signs the compressed file, encrypts the file, and pushes
 the encrypted compressed file to a bucket in S3 using AWS creds.
@@ -11,21 +11,21 @@ the encrypted compressed file to a bucket in S3 using AWS creds.
 
 `cyhy-data-extract` requires **Python 2** because it uses cyhy-core which is written in Python2. Python 3 is not supported at this time.
 
-`cyhy-data-extract` can run as either Python2 or Python3.
+`cyhy-data-extract` can run as either Python 2 or Python 3.
 
 To run the tool locally first install the requirements:
 ```bash
 pip install -r requirements.txt
 ```
 
-### cyhy-data-extract Usage and examples ###
+### cyhy-data-extract Usage and Examples ###
 
 ```bash
 python2.7 cyhy-data-extract.py --cyhy_section cyhy_section --bod_section bod_section --config cyhy-data-extract.cfg
 python2.7 cyhy-data-extract.py --cyhy_section cyhy_section --bod_section bod_section --aws --config cyhy-data-extract.cfg
 python2.7 cyhy-data-extract.py --cyhy_section cyhy_section --bod_section bod_section --aws --config cyhy-data-extract.cfg --date 2019-01-25
 ```
-Note: The sections are taken from the cyhy.conf
+Note: The section names are taken from the cyhy.conf
 
 #### cyhy-data-extract Options ####
 
@@ -50,12 +50,12 @@ Options:
 ```
 
 
-### cyhy-data-retriever Usage and examples ###
+### cyhy-data-retriever Usage and Examples ###
 
 ```bash
    cyhy-data-retriever --filename cyhy_extract_2019-01-25T000000+0000.tbz.gpg --aws --config cyhy-data-retriever.cfg
 ```
-Note: The sections are taken from the cyhy.conf
+Note: The section names are taken from the cyhy.conf
 
 #### cyhy-data-extract Options ####
 
@@ -104,7 +104,7 @@ Options:
 * `AWS_SECRET_ACCESS_KEY` - Key for AWS S3 bucket read access
 * `PROXY_CONFIG` - Only needed when proxy is present
 
-## Public domain ##
+## Public Domain ##
 
 This project is in the worldwide [public domain](LICENSE.md).
 
