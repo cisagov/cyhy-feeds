@@ -55,7 +55,7 @@ Options:
 ```bash
    cyhy-data-retriever --filename cyhy_extract_2019-01-25T000000+0000.tbz.gpg --aws --config cyhy-data-retriever.cfg
 ```
-Note: The section names are taken from the cyhy.conf
+Note: The section names are taken from the cyhy.conf [Example](https://github.com/dhs-ncats/cyhy_amis/blob/develop/ansible/roles/cyhy_feeds/tasks/main.yml#L111-L134)
 
 #### cyhy-data-extract Options ####
 
