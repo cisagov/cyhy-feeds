@@ -99,14 +99,42 @@ def cleanup_bucket_files(aws_access_key_id, aws_secret_access_key):
             print(key)
             print(key['LastModified'])
 
+def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection):
+    print('Fetching from', collection.name, 'collection...')
+    json_filename = '{!s}_{!s}.json'.format(collection.name, end_of_data_collection.isoformat().replace(':','').split('.')[0])
+    collection_file = open(json_filename,'w')
+    skips = 0 # How many documents in to a query that will be skipped
+    count = collection.find(query, {'key':False}).count() # Number of documents in a query
+    while skips < count:
+        collection_file.write(util.to_json(list(collection.find(query, {'key':False}).skip(skips).limit(PAGE_SIZE)))) # Pull documents between n and n + 100000
+        skips += PAGE_SIZE
+    collection_file.close()
+    if count > PAGE_SIZE:
+        # The first sed removes the ][ created by chunking the queries then the 2nd sed adds , to the document at the end of a chunked list
+        os.system('sed -i "/\]\[/d" %s ; sed -i "s/\}$/\}\,/g" %s ; ' % (json_filename, json_filename)) # If on MAC you will need gsed and gawk
+        # The previous sed will leave a }, at the last document in the list which is removed with this aws_access_key_id
+        os.system('''awk 'NR==FNR{tgt=NR-1;next} (FNR==tgt) && /\},/ { $1="    }" } 1' %s %s > %s.bak''' % (json_filename, json_filename, json_filename))
+        # This is a workaround for inplace
+        os.system('mv %s.bak %s' % (json_filename, json_filename))
+    print('Finished writing ', collection.name, ' to file.')
+    tbz_file.add(json_filename)
+    print(' Added {!s} to {!s}'.format(json_filename, tbz_filename))
+    # Delete file once added to tar
+    if os.path.exists(json_filename):
+        os.remove(json_filename)
+        print('Deleted ', json_filename, ' as part of cleanup.')
+
 
 def main():
     global __doc__
     __doc__ = re.sub('COMMAND_NAME', __file__, __doc__)
     args = docopt(__doc__, version='v0.0.1')
-    cyhy_db = database.db_from_config(args['--cyhy_section'])
-    scan_db = database.db_from_config(args['--scan_section'])
-    assessment_db = database.db_from_config(args['--assessment_section'])
+    if args['--cyhy_section']:
+        cyhy_db = database.db_from_config(args['--cyhy_section'])
+    if args['--scan_section']:
+        scan_db = database.db_from_config(args['--scan_section'])
+    if args['--assessment_section']:
+        assessment_db = database.db_from_config(args['--assessment_section'])
     now = util.utcnow()
     now_unix = time.time()
     # import IPython; IPython.embed() #<<< BREAKPOINT >>>
@@ -134,7 +162,7 @@ def main():
 
     # Check if OUTPUT_DIR exists; if not, bail out
     if not os.path.exists(OUTPUT_DIR):
-        print("ERROR: Output directory '{!s}' does not exist - exiting!".format(OUTPUT_DIR))
+        print('''ERROR: Output directory '{!s}' does not exist - exiting!'''.format(OUTPUT_DIR))
         sys.exit(1)
 
     # Set up GPG (used for encrypting and signing)
@@ -159,52 +187,48 @@ def main():
 
     # Create tar/bzip2 file for writing
     tbz_filename = 'cyhy_extract_{!s}.tbz'.format(end_of_data_collection.isoformat().replace(':','').split('.')[0])
-    tbz_file = tarfile.open(tbz_filename, mode="w:bz2")
+    tbz_file = tarfile.open(tbz_filename, mode='w:bz2')
 
-    for (collection, query) in [(cyhy_db.host_scans, {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
-                                (cyhy_db.port_scans, {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
-                                (cyhy_db.vuln_scans, {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
-                                (cyhy_db.hosts, {'owner':{'$in':orgs}, 'last_change':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
-                                (cyhy_db.tickets, {'owner':{'$in':orgs}, 'last_change':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
-                                (scan_db.https_scan, {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
-                                (scan_db.sslyze_scan, {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
-                                (scan_db.trustymail , {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
-                                (scan_db.certs , {'sct_or_not_before':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
-                                (assessment_db.rva , {})]:
-        print("Fetching from", collection.name, "collection...")
-        json_filename = '{!s}_{!s}.json'.format(collection.name, end_of_data_collection.isoformat().replace(':','').split('.')[0])
-        collection_file = open(json_filename,"w")
-        skips = 0 # How many documents in to a query that will be skipped
-        count = collection.find(query, {'key':False}).count() # Number of documents in a query
-        while skips < count:
-            collection_file.write(util.to_json(list(collection.find(query, {'key':False}).skip(skips).limit(PAGE_SIZE)))) # Pull documents between n and n + 100000
-            skips += PAGE_SIZE
-        collection_file.close()
-        if count > PAGE_SIZE:
-            # The first sed removes the ][ created by chunking the queries then the 2nd sed adds , to the document at the end of a chunked list
-            os.system('sed -i "/\]\[/d" %s ; sed -i "s/\}$/\}\,/g" %s ; ' % (json_filename, json_filename)) # If on MAC you will need gsed and gawk
-            # The previous sed will leave a }, at the last document in the list which is removed with this aws_access_key_id
-            os.system('''awk 'NR==FNR{tgt=NR-1;next} (FNR==tgt) && /\},/ { $1="    }" } 1' %s %s > %s.bak''' % (json_filename, json_filename, json_filename))
-            # This is a workaround for inplace
-            os.system('mv %s.bak %s' % (json_filename, json_filename))
-        print("Finished writing ", collection.name, " to file.")
-        tbz_file.add(json_filename)
-        print(" Added {!s} to {!s}".format(json_filename, tbz_filename))
-        # Delete file once added to tar
-        if os.path.exists(json_filename):
-            os.remove(json_filename)
-            print("Deleted ", json_filename, " as part of cleanup.")
+    cyhy_collection = {
+        'host_scans': {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
+        'port_scans': {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
+        'vuln_scans': {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
+        'hosts': {'owner':{'$in':orgs}, 'last_change':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
+        'tickets': {'owner':{'$in':orgs}, 'last_change':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}
+    }
+
+    scan_collection = {
+        'https_scan': {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
+        'sslyze_scan': {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
+        'trustymail': {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
+        'certs': {'sct_or_not_before':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}
+    }
+
+    assessment_collection = {
+        'rva': {},
+        'findings': {}
+    }
+
+    if args['--cyhy_section']:
+        for collection in cyhy_collection:
+            query_data(cyhy_db[collection], cyhy_collection[collection], tbz_file, tbz_filename, end_of_data_collection)
+    if args['--scan_section']:
+        for collection in scan_collection:
+            query_data(scan_db[collection], scan_collection[collection], tbz_file, tbz_filename, end_of_data_collection)
+    if args['--assessment_section']:
+        for collection in assessment_collection:
+            query_data(assessment_db[collection], assessment_collection[collection], tbz_file, tbz_filename, end_of_data_collection)
 
     json_data = util.to_json(get_dmarc_data(DMARC_AWS_ACCESS_KEY_ID, DMARC_AWS_SECRET_ACCESS_KEY,
                                     ES_REGION, ES_URL, DAYS_OF_DMARC_REPORTS, ES_RETRIEVE_SIZE))
-    json_filename = '{!s}_{!s}.json'.format("DMARC", end_of_data_collection.isoformat().replace(':','').split('.')[0])
-    dmarc_file = open(json_filename,"w")
+    json_filename = '{!s}_{!s}.json'.format('DMARC', end_of_data_collection.isoformat().replace(':','').split('.')[0])
+    dmarc_file = open(json_filename,'w')
     dmarc_file.write(json_data)
     tbz_file.add(json_filename)
     tbz_file.close()
     if os.path.exists(json_filename):
         os.remove(json_filename)
-        print("Deleted ", json_filename, " as part of cleanup.")
+        print('Deleted ', json_filename, ' as part of cleanup.')
 
     gpg_file_name = tbz_filename + '.gpg'
     gpg_full_path_filename = os.path.join(OUTPUT_DIR, gpg_file_name)
@@ -213,22 +237,22 @@ def main():
         status = gpg.encrypt_file(f, RECIPIENTS, armor=False, sign=SIGNER, passphrase=SIGNER_PASSPHRASE, output=gpg_full_path_filename)
 
     if not status.ok:
-        print("\nFAILURE - GPG ERROR!\n GPG status: {!s} \n GPG stderr:\n{!s}".format(status.status, status.stderr))
+        print('\nFAILURE - GPG ERROR!\n GPG status: {!s} \n GPG stderr:\n{!s}'.format(status.status, status.stderr))
         sys.exit(-1)
 
     if args['--aws']:
         # send the contents to the s3 bucket
         update_bucket(BUCKET_NAME, gpg_full_path_filename, gpg_file_name, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
         print('Upload to AWS bucket complete')
-    print("Encrypted, signed, compressed JSON data written to file: {!s}".format(gpg_full_path_filename))
+    print('Encrypted, signed, compressed JSON data written to file: {!s}'.format(gpg_full_path_filename))
 
     if os.path.exists(tbz_filename):
         os.remove(tbz_filename)
-        print("Deleted ", tbz_filename, " as part of cleanup.")
+        print('Deleted ', tbz_filename, ' as part of cleanup.')
 
     cleanup_old_files(OUTPUT_DIR, FILE_RETENTION_NUM_DAYS)
 
-    print("\nSUCCESS!")
+    print('\nSUCCESS!')
 
 if __name__=='__main__':
     main()
