@@ -100,9 +100,9 @@ def cleanup_bucket_files(aws_access_key_id, aws_secret_access_key):
             print(key['LastModified'])
 
 def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection):
-    print("Fetching from", collection.name, "collection...")
+    print('Fetching from', collection.name, 'collection...')
     json_filename = '{!s}_{!s}.json'.format(collection.name, end_of_data_collection.isoformat().replace(':','').split('.')[0])
-    collection_file = open(json_filename,"w")
+    collection_file = open(json_filename,'w')
     skips = 0 # How many documents in to a query that will be skipped
     count = collection.find(query, {'key':False}).count() # Number of documents in a query
     while skips < count:
@@ -116,13 +116,13 @@ def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection
         os.system('''awk 'NR==FNR{tgt=NR-1;next} (FNR==tgt) && /\},/ { $1="    }" } 1' %s %s > %s.bak''' % (json_filename, json_filename, json_filename))
         # This is a workaround for inplace
         os.system('mv %s.bak %s' % (json_filename, json_filename))
-    print("Finished writing ", collection.name, " to file.")
+    print('Finished writing ', collection.name, ' to file.')
     tbz_file.add(json_filename)
-    print(" Added {!s} to {!s}".format(json_filename, tbz_filename))
+    print(' Added {!s} to {!s}'.format(json_filename, tbz_filename))
     # Delete file once added to tar
     if os.path.exists(json_filename):
         os.remove(json_filename)
-        print("Deleted ", json_filename, " as part of cleanup.")
+        print('Deleted ', json_filename, ' as part of cleanup.')
 
 
 def main():
@@ -162,7 +162,7 @@ def main():
 
     # Check if OUTPUT_DIR exists; if not, bail out
     if not os.path.exists(OUTPUT_DIR):
-        print("ERROR: Output directory '{!s}' does not exist - exiting!".format(OUTPUT_DIR))
+        print('ERROR: Output directory '{!s}' does not exist - exiting!'.format(OUTPUT_DIR))
         sys.exit(1)
 
     # Set up GPG (used for encrypting and signing)
@@ -187,26 +187,26 @@ def main():
 
     # Create tar/bzip2 file for writing
     tbz_filename = 'cyhy_extract_{!s}.tbz'.format(end_of_data_collection.isoformat().replace(':','').split('.')[0])
-    tbz_file = tarfile.open(tbz_filename, mode="w:bz2")
+    tbz_file = tarfile.open(tbz_filename, mode='w:bz2')
 
     cyhy_collection = {
-        "host_scans": {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
-        "port_scans": {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
-        "vuln_scans": {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
-        "hosts": {'owner':{'$in':orgs}, 'last_change':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
-        "tickets": {'owner':{'$in':orgs}, 'last_change':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}
+        'host_scans': {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
+        'port_scans': {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
+        'vuln_scans': {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
+        'hosts': {'owner':{'$in':orgs}, 'last_change':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
+        'tickets': {'owner':{'$in':orgs}, 'last_change':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}
     }
 
     scan_collection = {
-        "https_scan": {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
-        "sslyze_scan": {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
-        "trustymail": {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
-        "certs": {'sct_or_not_before':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}
+        'https_scan': {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
+        'sslyze_scan': {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
+        'trustymail': {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}},
+        'certs': {'sct_or_not_before':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}
     }
 
     assessment_collection = {
-        "rva": {},
-        "findings", {}
+        'rva': {},
+        'findings', {}
     }
 
     if args['--cyhy_section']:
@@ -221,14 +221,14 @@ def main():
 
     json_data = util.to_json(get_dmarc_data(DMARC_AWS_ACCESS_KEY_ID, DMARC_AWS_SECRET_ACCESS_KEY,
                                     ES_REGION, ES_URL, DAYS_OF_DMARC_REPORTS, ES_RETRIEVE_SIZE))
-    json_filename = '{!s}_{!s}.json'.format("DMARC", end_of_data_collection.isoformat().replace(':','').split('.')[0])
-    dmarc_file = open(json_filename,"w")
+    json_filename = '{!s}_{!s}.json'.format('DMARC', end_of_data_collection.isoformat().replace(':','').split('.')[0])
+    dmarc_file = open(json_filename,'w')
     dmarc_file.write(json_data)
     tbz_file.add(json_filename)
     tbz_file.close()
     if os.path.exists(json_filename):
         os.remove(json_filename)
-        print("Deleted ", json_filename, " as part of cleanup.")
+        print('Deleted ', json_filename, ' as part of cleanup.')
 
     gpg_file_name = tbz_filename + '.gpg'
     gpg_full_path_filename = os.path.join(OUTPUT_DIR, gpg_file_name)
@@ -237,22 +237,22 @@ def main():
         status = gpg.encrypt_file(f, RECIPIENTS, armor=False, sign=SIGNER, passphrase=SIGNER_PASSPHRASE, output=gpg_full_path_filename)
 
     if not status.ok:
-        print("\nFAILURE - GPG ERROR!\n GPG status: {!s} \n GPG stderr:\n{!s}".format(status.status, status.stderr))
+        print('\nFAILURE - GPG ERROR!\n GPG status: {!s} \n GPG stderr:\n{!s}'.format(status.status, status.stderr))
         sys.exit(-1)
 
     if args['--aws']:
         # send the contents to the s3 bucket
         update_bucket(BUCKET_NAME, gpg_full_path_filename, gpg_file_name, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
         print('Upload to AWS bucket complete')
-    print("Encrypted, signed, compressed JSON data written to file: {!s}".format(gpg_full_path_filename))
+    print('Encrypted, signed, compressed JSON data written to file: {!s}'.format(gpg_full_path_filename))
 
     if os.path.exists(tbz_filename):
         os.remove(tbz_filename)
-        print("Deleted ", tbz_filename, " as part of cleanup.")
+        print('Deleted ', tbz_filename, ' as part of cleanup.')
 
     cleanup_old_files(OUTPUT_DIR, FILE_RETENTION_NUM_DAYS)
 
-    print("\nSUCCESS!")
+    print('\nSUCCESS!')
 
 if __name__=='__main__':
     main()
