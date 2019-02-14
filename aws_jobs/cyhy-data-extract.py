@@ -2,20 +2,21 @@
 '''Create compressed, encrypted, signed extract file with Federal CyHy data for integration with the Weathermap project.
 
 Usage:
-  COMMAND_NAME [--cyhy_section CYHY_SECTION] [--bod_section BOD_SECTION] [-v | --verbose] [-f | --federal] [-a | --aws] --config CONFIG_FILE [--date DATE]
+  COMMAND_NAME [--cyhy_section CYHY_SECTION] [--scan_section SCAN_SECTION] [--assessment_section ASSESSMENT_SECTION] [-v | --verbose] [-f | --federal] [-a | --aws] --config CONFIG_FILE [--date DATE]
   COMMAND_NAME (-h | --help)
   COMMAND_NAME --version
 
 Options:
-  -h --help                                            Show this screen
-  --version                                            Show version
-  -s CYHY_SECTION --cyhy_section=CYHY_SECTION          CyHy configuration section to use
-  -b BOD_SECTION --bod_section=BOD_SECTION             BOD configuration section to use
-  -v --verbose                                         Show verbose output
-  -f --federal                                         Returns only Federal requestDocs
-  -a --aws                                             Output results to s3 bucket
-  -c CONFIG_FILE --config=CONFIG_FILE                  Configuration file for this script
-  -d DATE --date=DATE                                  Specific date to export data from in form: %Y-%m-%d (eg. 2018-12-31) NOTE that this date is in UTC
+  -h --help                                                         Show this screen
+  --version                                                         Show version
+  -x CYHY_SECTION --cyhy_section=CYHY_SECTION                       CyHy configuration section to use
+  -y SCAN_SECTION --scan_section=SCAN_SECTION                       Scan configuration section to use
+  -z ASSESSMENT_SECTION --assessment_section=ASSESSMENT_SECTION     Assessment configuration section to use
+  -v --verbose                                                      Show verbose output
+  -f --federal                                                      Returns only Federal requestDocs
+  -a --aws                                                          Output results to s3 bucket
+  -c CONFIG_FILE --config=CONFIG_FILE                               Configuration file for this script
+  -d DATE --date=DATE                                               Specific date to export data from in form: %Y-%m-%d (eg. 2018-12-31) NOTE that this date is in UTC
 
 '''
 
@@ -104,7 +105,8 @@ def main():
     __doc__ = re.sub('COMMAND_NAME', __file__, __doc__)
     args = docopt(__doc__, version='v0.0.1')
     cyhy_db = database.db_from_config(args['--cyhy_section'])
-    bod_db = database.db_from_config(args['--bod_section'])
+    scan_db = database.db_from_config(args['--scan_section'])
+    assessment_db = database.db_from_config(args['--assessment_section'])
     now = util.utcnow()
     now_unix = time.time()
     # import IPython; IPython.embed() #<<< BREAKPOINT >>>
@@ -164,10 +166,11 @@ def main():
                                 (cyhy_db.vuln_scans, {'owner':{'$in':orgs}, 'time':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
                                 (cyhy_db.hosts, {'owner':{'$in':orgs}, 'last_change':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
                                 (cyhy_db.tickets, {'owner':{'$in':orgs}, 'last_change':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
-                                (bod_db.https_scan, {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
-                                (bod_db.sslyze_scan, {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
-                                (bod_db.trustymail, {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
-                                (bod_db.certs, {'sct_or_not_before':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}})]:
+                                (scan_db.https_scan, {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
+                                (scan_db.sslyze_scan, {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
+                                (scan_db.trustymail , {'scan_date':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
+                                (scan_db.certs , {'sct_or_not_before':{'$gte':start_of_data_collection, '$lt':end_of_data_collection}}),
+                                (assessment_db.rva , {})]:
         print("Fetching from", collection.name, "collection...")
         json_filename = '{!s}_{!s}.json'.format(collection.name, end_of_data_collection.isoformat().replace(':','').split('.')[0])
         collection_file = open(json_filename,"w")
