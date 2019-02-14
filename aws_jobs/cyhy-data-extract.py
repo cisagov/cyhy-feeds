@@ -162,7 +162,7 @@ def main():
 
     # Check if OUTPUT_DIR exists; if not, bail out
     if not os.path.exists(OUTPUT_DIR):
-        print('ERROR: Output directory '{!s}' does not exist - exiting!'.format(OUTPUT_DIR))
+        print('''ERROR: Output directory '{!s}' does not exist - exiting!'''.format(OUTPUT_DIR))
         sys.exit(1)
 
     # Set up GPG (used for encrypting and signing)
@@ -206,7 +206,7 @@ def main():
 
     assessment_collection = {
         'rva': {},
-        'findings', {}
+        'findings': {}
     }
 
     if args['--cyhy_section']:
