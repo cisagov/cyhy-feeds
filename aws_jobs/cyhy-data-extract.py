@@ -182,7 +182,7 @@ def main():
         collection_file.close()
         if count > PAGE_SIZE:
             # The first sed removes the ][ created by chunking the queries then the 2nd sed adds , to the document at the end of a chunked list
-            os.system('sed -i "/\]\[/d" %s ; gsed -i "s/\}$/\}\,/g" %s ; ' % (json_filename, json_filename)) # If on MAC you will need gsed and gawk
+            os.system('sed -i "/\]\[/d" %s ; sed -i "s/\}$/\}\,/g" %s ; ' % (json_filename, json_filename)) # If on MAC you will need gsed and gawk
             # The previous sed will leave a }, at the last document in the list which is removed with this aws_access_key_id
             os.system('''awk 'NR==FNR{tgt=NR-1;next} (FNR==tgt) && /\},/ { $1="    }" } 1' %s %s > %s.bak''' % (json_filename, json_filename, json_filename))
             # This is a workaround for inplace
