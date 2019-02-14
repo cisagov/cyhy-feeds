@@ -21,6 +21,9 @@ pip install -r requirements.txt
 ### cyhy-data-extract Usage and Examples ###
 
 ```bash
+python2.7 cyhy-data-extract.py --cyhy_section cyhy_section --config cyhy-data-extract.cfg
+python2.7 cyhy-data-extract.py --scan_section scan_section --config cyhy-data-extract.cfg
+python2.7 cyhy-data-extract.py --assessment_section assessment_section --config cyhy-data-extract.cfg
 python2.7 cyhy-data-extract.py --cyhy_section cyhy_section --scan_section scan_section --config cyhy-data-extract.cfg
 python2.7 cyhy-data-extract.py --cyhy_section cyhy_section --scan_section scan_section --aws --config cyhy-data-extract.cfg
 python2.7 cyhy-data-extract.py --cyhy_section cyhy_section --scan_section scan_section --aws --config cyhy-data-extract.cfg --date 2019-01-25
