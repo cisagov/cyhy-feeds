@@ -9,7 +9,7 @@ the encrypted compressed file to a bucket in S3 using AWS creds.
 
 ## Getting Started ##
 
-`cyhy-data-extract` requires **Python 2** because it uses cyhy-core which is written in Python2. Python 3 is not supported at this time.
+`cyhy-data-extract` requires **Python 2** because it uses cyhy-core which is written in Python2. Python 3 is not supported at this time. Note: cyhy-core is in a private repository at this time so cyhy-feeds cannot be installed without access to this repo
 
 `cyhy-data-extract` can run as either Python 2 or Python 3.
 
