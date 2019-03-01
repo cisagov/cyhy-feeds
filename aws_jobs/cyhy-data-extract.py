@@ -111,9 +111,9 @@ def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection
     collection_file.close()
     if count > PAGE_SIZE:
         # The first sed removes the ][ created by chunking the queries then the 2nd sed adds , to the document at the end of a chunked list
-        os.system('sed -i "/\]\[/d" %s ; sed -i "s/\}$/\}\,/g" %s ; ' % (json_filename, json_filename)) # If on MAC you will need gsed and gawk
+        os.system('gsed -i "/\]\[/d" %s ; gsed -i "s/\}$/\}\,/g" %s ; ' % (json_filename, json_filename)) # If on MAC you will need gsed and gawk
         # The previous sed will leave a }, at the last document in the list which is removed with this aws_access_key_id
-        os.system('''awk 'NR==FNR{tgt=NR-1;next} (FNR==tgt) && /\},/ { $1="    }" } 1' %s %s > %s.bak''' % (json_filename, json_filename, json_filename))
+        os.system('''gawk 'NR==FNR{tgt=NR-1;next} (FNR==tgt) && /\},/ { $1="    }" } 1' %s %s > %s.bak''' % (json_filename, json_filename, json_filename))
         # This is a workaround for inplace
         os.system('mv %s.bak %s' % (json_filename, json_filename))
     print('Finished writing ', collection.name, ' to file.')
@@ -219,8 +219,9 @@ def main():
         for collection in assessment_collection:
             query_data(assessment_db[collection], assessment_collection[collection], tbz_file, tbz_filename, end_of_data_collection)
 
-    json_data = util.to_json(get_dmarc_data(DMARC_AWS_ACCESS_KEY_ID, DMARC_AWS_SECRET_ACCESS_KEY,
-                                    ES_REGION, ES_URL, DAYS_OF_DMARC_REPORTS, ES_RETRIEVE_SIZE))
+    # json_data = util.to_json(get_dmarc_data(DMARC_AWS_ACCESS_KEY_ID, DMARC_AWS_SECRET_ACCESS_KEY,
+    #                                 ES_REGION, ES_URL, DAYS_OF_DMARC_REPORTS, ES_RETRIEVE_SIZE))
+    json_data = util.to_json(get_dmarc_data(ES_REGION, ES_URL, DAYS_OF_DMARC_REPORTS, ES_RETRIEVE_SIZE))
     json_filename = '{!s}_{!s}.json'.format('DMARC', end_of_data_collection.isoformat().replace(':','').split('.')[0])
     dmarc_file = open(json_filename,'w')
     dmarc_file.write(json_data)
