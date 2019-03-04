@@ -46,7 +46,7 @@ def query_elasticsearch(session, es_region, es_url, since,
     by Elasticsearch.
     """
     ans = None
-    
+
     # Construct the auth from the AWS credentials
     aws_credentials = session.get_credentials()
     awsauth = AWS4Auth(aws_credentials.access_key,
@@ -123,22 +123,15 @@ def query_elasticsearch(session, es_region, es_url, since,
 
     return ans
 
-def get_dmarc_data(aws_access_key_id, aws_secret_access_key,
-                   es_region, es_url, days,
-                   es_retrieve_size=DEFAULT_ES_RETRIEVE_SIZE):
+
+def get_dmarc_data(es_region, es_url, days,
+                   es_retrieve_size=DEFAULT_ES_RETRIEVE_SIZE,
+                   aws_profile="default"):
     """Query Elasticsearch for all DMARC aggregate reports received
     since a given time.
 
     Parameters
     ----------
-    aws_access_key_id : str
-    The AWS access key ID to use when connecting to the Elasticsearch
-    database.
-
-    aws_secret_access_key : str
-    The AWS secret access key to use when connecting to the
-    Elasticsearch database.
-
     es_region : str
     The AWS region in which the DMARC Elasticsearch database resides.
 
@@ -151,6 +144,9 @@ def get_dmarc_data(aws_access_key_id, aws_secret_access_key,
 
     es_retrieve_size : int
     The number of records to retrieve from Elasticsearch per request.
+
+    aws_profile : str
+    The name of the AWS profile to use.
 
     Returns
     -------
@@ -165,8 +161,7 @@ def get_dmarc_data(aws_access_key_id, aws_secret_access_key,
     since = datetime.utcnow() - timedelta(days=days)
 
     logging.info('Creating AWS session')
-    session = boto3.Session(aws_access_key_id=aws_access_key_id,
-                            aws_secret_access_key=aws_secret_access_key)
+    session = boto3.Session(profile=aws_profile)
 
     logging.info('Retrieving DMARC data')
     reports = query_elasticsearch(session, es_region, es_url, since,

@@ -47,15 +47,10 @@ DAYS_OF_DMARC_REPORTS = 1
 PAGE_SIZE = 100000  # Number of documents per query
 
 
-def update_bucket(bucket_name, local_file, remote_file_name,
-                  aws_access_key_id, aws_secret_access_key):
+def update_bucket(bucket_name, local_file, remote_file_name):
     '''update the s3 bucket with the new contents'''
 
-    s3 = boto3.client(
-        's3',
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key
-    )
+    s3 = boto3.client('s3')
 
     s3.upload_file(local_file, bucket_name, remote_file_name)
 
@@ -306,11 +301,11 @@ def main():
                        assessment_collection[collection],
                        tbz_file, tbz_filename, end_of_data_collection)
 
-    json_data = util.to_json(get_dmarc_data(DMARC_AWS_ACCESS_KEY_ID,
-                                            DMARC_AWS_SECRET_ACCESS_KEY,
-                                            ES_REGION, ES_URL,
+    # Note that we use the elasticsearch AWS profile here
+    json_data = util.to_json(get_dmarc_data(ES_REGION, ES_URL,
                                             DAYS_OF_DMARC_REPORTS,
-                                            ES_RETRIEVE_SIZE))
+                                            ES_RETRIEVE_SIZE,
+                                            "elasticsearch"))
     json_filename = '{!s}_{!s}.json'.format('DMARC',
                                             end_of_data_collection.isoformat().replace(':', '').split('.')[0])
     dmarc_file = open(json_filename, 'w')
@@ -336,8 +331,7 @@ def main():
 
     if args['--aws']:
         # send the contents to the s3 bucket
-        update_bucket(BUCKET_NAME, gpg_full_path_filename, gpg_file_name,
-                      AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+        update_bucket(BUCKET_NAME, gpg_full_path_filename, gpg_file_name)
         print('Upload to AWS bucket complete')
     print('Encrypted, signed, compressed JSON data written to file: {!s}'.format(gpg_full_path_filename))
 
