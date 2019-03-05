@@ -161,7 +161,7 @@ def get_dmarc_data(es_region, es_url, days,
     since = datetime.utcnow() - timedelta(days=days)
 
     logging.info('Creating AWS session')
-    session = boto3.Session(profile=aws_profile)
+    session = boto3.Session(profile_name=aws_profile)
 
     logging.info('Retrieving DMARC data')
     reports = query_elasticsearch(session, es_region, es_url, since,
