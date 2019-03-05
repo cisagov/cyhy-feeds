@@ -64,7 +64,7 @@ def query_elasticsearch(session, es_region, es_url, since,
                             {
                                 'range': {
                                     'report_metadata.date_range.begin': {
-                                        'gte': (since - datetime(1970,1,1)).total_seconds()
+                                        'gte': (since - datetime(1970, 1, 1)).total_seconds()
                                     }
                                 }
                             }
