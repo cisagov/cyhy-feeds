@@ -163,13 +163,11 @@ def main():
     # Files older than this are deleted by cleanup_old_files()
     FILE_RETENTION_NUM_DAYS = int(config.get('DEFAULT',
                                              'FILE_RETENTION_NUM_DAYS'))
-    AWS_ACCESS_KEY_ID = config.get('DEFAULT', 'AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = config.get('DEFAULT', 'AWS_SECRET_ACCESS_KEY')
-    DMARC_AWS_ACCESS_KEY_ID = config.get('DMARC', 'AWS_ACCESS_KEY_ID')
-    DMARC_AWS_SECRET_ACCESS_KEY = config.get('DMARC', 'AWS_SECRET_ACCESS_KEY')
     ES_REGION = config.get('DMARC', 'ES_REGION')
     ES_URL = config.get('DMARC', 'ES_URL')
     ES_RETRIEVE_SIZE = config.get('DMARC', 'ES_RETRIEVE_SIZE')
+    ES_AWS_CONFIG_SECTION_NAME = config.get('DMARC',
+                                            'ES_AWS_CONFIG_SECTION_NAME')
 
     # Check if OUTPUT_DIR exists; if not, bail out
     if not os.path.exists(OUTPUT_DIR):
@@ -305,7 +303,7 @@ def main():
     json_data = util.to_json(get_dmarc_data(ES_REGION, ES_URL,
                                             DAYS_OF_DMARC_REPORTS,
                                             ES_RETRIEVE_SIZE,
-                                            "elasticsearch"))
+                                            ES_AWS_CONFIG_SECTION_NAME))
     json_filename = '{!s}_{!s}.json'.format('DMARC',
                                             end_of_data_collection.isoformat().replace(':', '').split('.')[0])
     dmarc_file = open(json_filename, 'w')
