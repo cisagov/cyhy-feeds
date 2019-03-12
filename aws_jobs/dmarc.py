@@ -1,6 +1,5 @@
 # standard python libraries
 from datetime import datetime, timedelta
-import json
 import logging
 import re
 
@@ -150,8 +149,8 @@ def get_dmarc_data(es_region, es_url, days,
 
     Returns
     -------
-    str : a string consisting of JSON data for all DMARC aggregate
-    reports received in specified time frame
+    dict : a dict consisting of data for all DMARC aggregate reports
+    received in the specified time frame
 
     Throws
     ------
@@ -167,5 +166,4 @@ def get_dmarc_data(es_region, es_url, days,
     reports = query_elasticsearch(session, es_region, es_url, since,
                                   es_retrieve_size)
 
-    # Convert objects to one big string
-    return json.dumps(reports)
+    return reports
