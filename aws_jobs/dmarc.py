@@ -1,6 +1,5 @@
 # standard python libraries
 from datetime import datetime, timedelta
-import json
 import logging
 import re
 
@@ -53,6 +52,8 @@ def query_elasticsearch(session, es_region, es_url, since,
                        aws_credentials.secret_key,
                        es_region, 'es',
                        session_token=aws_credentials.token)
+    # Compute since in seconds since the epoch
+    since_unix = (since - datetime(1970, 1, 1)).total_seconds()
     # Now construct the query.
     query = {
         'size': es_retrieve_size,
@@ -64,7 +65,7 @@ def query_elasticsearch(session, es_region, es_url, since,
                             {
                                 'range': {
                                     'report_metadata.date_range.begin': {
-                                        'gte': (since - datetime(1970, 1, 1)).total_seconds()
+                                        'gte': since_unix
                                     }
                                 }
                             }
@@ -150,8 +151,8 @@ def get_dmarc_data(es_region, es_url, days,
 
     Returns
     -------
-    str : a string consisting of JSON data for all DMARC aggregate
-    reports received in specified time frame
+    dict : a dict consisting of data for all DMARC aggregate reports
+    received in the specified time frame
 
     Throws
     ------
@@ -167,5 +168,4 @@ def get_dmarc_data(es_region, es_url, days,
     reports = query_elasticsearch(session, es_region, es_url, since,
                                   es_retrieve_size)
 
-    # Convert objects to one big string
-    return json.dumps(reports)
+    return reports
