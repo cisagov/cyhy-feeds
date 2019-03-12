@@ -308,6 +308,7 @@ def main():
                                             end_of_data_collection.isoformat().replace(':', '').split('.')[0])
     dmarc_file = open(json_filename, 'w')
     dmarc_file.write(json_data)
+    dmarc_file.close()
     tbz_file.add(json_filename)
     tbz_file.close()
     if os.path.exists(json_filename):
