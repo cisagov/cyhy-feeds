@@ -5,14 +5,19 @@
 
 cyhy-feeds consists of two parts; the extractor and the retriever
 
-`cyhy-data-extract` compresses the data, signs the compressed file, encrypts the file, and pushes
-the encrypted compressed file to a bucket in S3 using AWS creds.
+`cyhy-data-extract` compresses the data, signs the compressed file,
+encrypts the file, and pushes the encrypted compressed file to a
+bucket in S3 using AWS creds.
 
-`cyhy-data-retriever` pulls the file from s3, decrypts the file, and decompresses it.
+`cyhy-data-retriever` pulls the file from s3, decrypts the file, and
+decompresses it.
 
 ## Getting Started ##
 
-`cyhy-data-extract` requires **Python 2** because it uses cyhy-core which is written in Python2. Python 3 is not supported at this time. Note: cyhy-core is in a private repository at this time so cyhy-feeds cannot be installed without access to this repo
+`cyhy-data-extract` requires **Python 2** because it uses cyhy-core
+which is written in Python2. Python 3 is not supported at this
+time. Note: cyhy-core is in a private repository at this time so
+cyhy-feeds cannot be installed without access to this repo
 
 `cyhy-data-extract` can run as either Python 2 or Python 3.
 
@@ -98,11 +103,12 @@ Options:
 * `SIGNER_PASSPHRASE` - Passphrase for signer gpg key
 * `OUTPUT_DIR` - Directory to output extract to
 * `FILE_RETENTION_NUM_DAYS` - Number of days to hold extract
-* `AWS_ACCESS_KEY_ID` - User ID used for AWS S3 bucket write access
-* `AWS_SECRET_ACCESS_KEY` - Key for AWS S3 bucket write access
+* `ES_AWS_CONFIG_SECTION_NAME` - Name of the AWS config file section
+  containing the configuration to be used when accessing the
+  Elasticsearch data
 * `ES_REGION` - Region for DMARC bucket
-* `ES_URL` - Elastic search url
-* `ES_RETRIEVE_SIZE` - Elastic search size
+* `ES_URL` - Elasticsearch URL
+* `ES_RETRIEVE_SIZE` - Elasticsearch size
 
 ### Retriever Config File Parameters ###
 
