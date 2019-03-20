@@ -30,7 +30,6 @@ import boto3        # pip install boto3
 import botocore     # pip install botorcore
 import dateutil.tz as tz
 import gnupg        # Requires installation of GPG 2.1 (e.g. port install gnupg21) and 'python-gnupg' package (e.g. pip install python-gnupg)
-import subprocess
 import tarfile
 
 BUCKET_NAME = 'ncats-moe-data'
@@ -45,7 +44,6 @@ def main():
     # Read parameters in from config file
     config = SafeConfigParser()
     config.read([args['--config']])
-    CLIENT_PRIVATE_KEY_FILE = config.get('DEFAULT', 'CLIENT_PRIVATE_KEY_FILE')
     GNUPG_HOME = config.get('DEFAULT', 'GNUPG_HOME')
     GPG_DECRYPTION_PASSPHRASE = config.get('DEFAULT', 'GPG_DECRYPTION_PASSPHRASE')
     AWS_ACCESS_KEY_ID = config.get('DEFAULT', 'AWS_ACCESS_KEY_ID')
