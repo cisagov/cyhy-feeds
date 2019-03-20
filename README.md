@@ -1,5 +1,8 @@
 # Cyhy-feeds :inbox_tray: :outbox_tray:
 
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/cyhy-feeds.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/cyhy-feeds/alerts/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/cyhy-feeds.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/cyhy-feeds/context:python)
+
 cyhy-feeds consists of two parts; the extractor and the retriever
 
 `cyhy-data-extract` compresses the data, signs the compressed file, encrypts the file, and pushes
