@@ -27,14 +27,16 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from docopt import docopt
 import boto3        # pip install boto3
-import botocore     # pip install botorcore
+import botocore     # pip install botocore
 import dateutil.tz as tz
-import gnupg        # Requires installation of GPG 2.1 (e.g. port install gnupg21) and 'python-gnupg' package (e.g. pip install python-gnupg)
-import subprocess
+# Requires installation of GPG 2.1 (e.g. port install gnupg21) and
+# 'python-gnupg' package (e.g. pip install python-gnupg)
+import gnupg
 import tarfile
 
 BUCKET_NAME = 'ncats-moe-data'
 DOMAIN = 'ncats-moe-data'
+
 
 def main():
     global __doc__
@@ -45,18 +47,22 @@ def main():
     # Read parameters in from config file
     config = SafeConfigParser()
     config.read([args['--config']])
-    CLIENT_PRIVATE_KEY_FILE = config.get('DEFAULT', 'CLIENT_PRIVATE_KEY_FILE')
     GNUPG_HOME = config.get('DEFAULT', 'GNUPG_HOME')
-    GPG_DECRYPTION_PASSPHRASE = config.get('DEFAULT', 'GPG_DECRYPTION_PASSPHRASE')
+    GPG_DECRYPTION_PASSPHRASE = config.get('DEFAULT',
+                                           'GPG_DECRYPTION_PASSPHRASE')
     AWS_ACCESS_KEY_ID = config.get('DEFAULT', 'AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = config.get('DEFAULT', 'AWS_SECRET_ACCESS_KEY')
 
     # Set up name of file to retrieve
     if args['--filename']:      # If extract filename is provided, use that
         extract_filename = args['--filename']
-    else:                       # Otherwise, look for the most-recent daily file; this must change if we start generating more than one file per day
+    else:
+        # Otherwise, look for the most-recent daily file; this must
+        # change if we start generating more than one file per day
         today = now + relativedelta(hour=0, minute=0, second=0, microsecond=0)
-        extract_filename = 'cyhy_extract_{!s}.tbz.gpg'.format(today.isoformat().replace(':','').split('.')[0])
+        extract_filename = 'cyhy_extract_{!s}.tbz.gpg'.format(
+            today.isoformat().replace(':', '').split('.')[0]
+        )
 
     # Download extract file from s3
     if args['--aws']:
@@ -79,10 +85,16 @@ def main():
         decrypted_filename = extract_filename + '_decrypted'
 
     # Use GPG to verify & decrypt extract file
-    # IMPORTANT: To pass in the passphrase for decryption, gpg-agent.conf in GNUPG_HOME must have: allow-loopback-pinentry
-    gpg = gnupg.GPG(gpgbinary='gpg2', gnupghome=GNUPG_HOME, verbose=args['--verbose'], options=['--pinentry-mode', 'loopback'])
+    #
+    # IMPORTANT: To pass in the passphrase for decryption,
+    # gpg-agent.conf in GNUPG_HOME must have: allow-loopback-pinentry
+    gpg = gnupg.GPG(gpgbinary='gpg2', gnupghome=GNUPG_HOME,
+                    verbose=args['--verbose'],
+                    options=['--pinentry-mode', 'loopback'])
     extract_stream = open(extract_filename, 'rb')
-    decrypted_data = gpg.decrypt_file(extract_stream, passphrase=GPG_DECRYPTION_PASSPHRASE, output=decrypted_filename)
+    decrypted_data = gpg.decrypt_file(extract_stream,
+                                      passphrase=GPG_DECRYPTION_PASSPHRASE,
+                                      output=decrypted_filename)
     extract_stream.close()
 
     if not decrypted_data.ok:
@@ -105,7 +117,8 @@ def main():
         sys.exit(-1)
     tar.close()
 
-    # Shell equivalent for decrypt/uncompress:  gpg -d extract_filename | tar xj
+    # Shell equivalent for decrypt/uncompress:
+    # gpg -d extract_filename | tar xj
 
     # For debugging:
     # import IPython; IPython.embed()
@@ -114,5 +127,6 @@ def main():
     print("\nSUCCESS!")
     sys.exit(1)
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     main()
