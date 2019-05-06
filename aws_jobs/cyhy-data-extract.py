@@ -281,7 +281,7 @@ def main():
     }
 
     assessment_collection = {
-        'rva': {},
+        'assessments': {},
         'findings': {}
     }
 
