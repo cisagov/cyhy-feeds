@@ -27,6 +27,7 @@ from ConfigParser import SafeConfigParser
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from docopt import docopt
+import dateutil.tz as tz
 import boto3
 import gnupg    # pip install python-gnupg
 import os
@@ -34,8 +35,10 @@ from pytz import timezone
 import subprocess
 import tarfile
 import time
-from cyhy.db import database
-from cyhy.util import util
+import json
+import bson
+import netaddr
+from mongo_db_from_config import db_from_config
 from dmarc import get_dmarc_data
 
 BUCKET_NAME = 'ncats-moe-data'
@@ -47,8 +50,29 @@ DAYS_OF_DMARC_REPORTS = 1
 PAGE_SIZE = 100000  # Number of documents per query
 
 
+def custom_json_handler(obj):
+    """Format the provided JSON object in the desired """
+    if hasattr(obj, 'isoformat'):
+        return obj.isoformat()
+    elif type(obj) == bson.objectid.ObjectId:
+        return repr(obj)
+    elif type(obj) == netaddr.IPAddress:
+        return str(obj)
+    elif type(obj) == netaddr.IPNetwork:
+        return str(obj)
+    elif type(obj) == netaddr.IPSet:
+        return obj.iter_cidrs()
+    else:
+        raise TypeError('Object of type %s with value of %s is not JSON serializable' % (type(obj), repr(obj)))
+
+
+def to_json(obj):
+    """Return a string version of the formatted JSON."""
+    return json.dumps(obj, sort_keys=True, indent=4, default=custom_json_handler)
+
+
 def update_bucket(bucket_name, local_file, remote_file_name):
-    '''update the s3 bucket with the new contents'''
+    """update the s3 bucket with the new contents"""
 
     s3 = boto3.client('s3')
 
@@ -56,7 +80,7 @@ def update_bucket(bucket_name, local_file, remote_file_name):
 
 
 def create_dummy_files(output_dir):
-    ''' Used for testing cleanup routine below '''
+    """ Used for testing cleanup routine below """
     for n in range(1, 21):
         dummy_filename = 'dummy_file_{!s}.gpg'.format(n)
         full_path_dummy_filename = os.path.join(output_dir, dummy_filename)
@@ -69,8 +93,8 @@ def create_dummy_files(output_dir):
 
 
 def cleanup_old_files(output_dir, file_retention_num_days):
-    '''Deletes *.gpg files older than file_retention_num_days in the
-specified output_dir'''
+    """Deletes *.gpg files older than file_retention_num_days in the
+specified output_dir"""
     now_unix = time.time()
     for filename in os.listdir(output_dir):
         # We only care about filenames that end with .gpg
@@ -94,7 +118,7 @@ def cleanup_bucket_files(aws_access_key_id, aws_secret_access_key):
         aws_secret_access_key=aws_secret_access_key
     )
 
-    if(len(s3.list_objects(Bucket=BUCKET_NAME)['Contents']) > MAX_ENTRIES):
+    if len(s3.list_objects(Bucket=BUCKET_NAME)['Contents']) > MAX_ENTRIES:
         for key in s3.list_objects(Bucket=BUCKET_NAME)['Contents']:
             print(key)
             print(key['LastModified'])
@@ -112,7 +136,7 @@ def query_data(collection, query, tbz_file, tbz_filename,
     count = collection.find(query, {'key': False}).count()
     while skips < count:
         # Pull documents between n and n + 100000
-        collection_file.write(util.to_json(list(collection.find(query, {'key': False}).skip(skips).limit(PAGE_SIZE))))
+        collection_file.write(to_json(list(collection.find(query, {'key': False}).skip(skips).limit(PAGE_SIZE))))
         skips += PAGE_SIZE
     collection_file.close()
     if count > PAGE_SIZE:
@@ -140,12 +164,12 @@ def main():
     __doc__ = re.sub('COMMAND_NAME', __file__, __doc__)
     args = docopt(__doc__, version='v0.0.1')
     if args['--cyhy_section']:
-        cyhy_db = database.db_from_config(args['--cyhy_section'])
+        cyhy_db = db_from_config(args['--cyhy_section'])
     if args['--scan_section']:
-        scan_db = database.db_from_config(args['--scan_section'])
+        scan_db = db_from_config(args['--scan_section'])
     if args['--assessment_section']:
-        assessment_db = database.db_from_config(args['--assessment_section'])
-    now = util.utcnow()
+        assessment_db = db_from_config(args['--assessment_section'])
+    now = datetime.now(tz.tzutc())
     # import IPython; IPython.embed() #<<< BREAKPOINT >>>
     # sys.exit(0)
 
@@ -300,7 +324,7 @@ def main():
                        tbz_file, tbz_filename, end_of_data_collection)
 
     # Note that we use the elasticsearch AWS profile here
-    json_data = util.to_json(get_dmarc_data(ES_REGION, ES_URL,
+    json_data = to_json(get_dmarc_data(ES_REGION, ES_URL,
                                             DAYS_OF_DMARC_REPORTS,
                                             ES_RETRIEVE_SIZE,
                                             ES_AWS_CONFIG_SECTION_NAME))
