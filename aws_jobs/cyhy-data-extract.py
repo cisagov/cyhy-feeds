@@ -3,18 +3,17 @@
 data for integration with the Weathermap project.
 
 Usage:
-  COMMAND_NAME [--cyhy_section CYHY_SECTION] [--scan_section SCAN_SECTION] [--assessment_section ASSESSMENT_SECTION] [-v | --verbose] [-f | --federal] [-a | --aws] --config CONFIG_FILE [--date DATE]
+  COMMAND_NAME [--cyhy_config CYHY_CONFIG] [--scan_config SCAN_CONFIG] [--assessment_config ASSESSMENT_CONFIG] [-v | --verbose] [-a | --aws] --config CONFIG_FILE [--date DATE]
   COMMAND_NAME (-h | --help)
   COMMAND_NAME --version
 
 Options:
   -h --help                                                         Show this screen
   --version                                                         Show version
-  -x CYHY_SECTION --cyhy_section=CYHY_SECTION                       CyHy configuration section to use
-  -y SCAN_SECTION --scan_section=SCAN_SECTION                       Scan configuration section to use
-  -z ASSESSMENT_SECTION --assessment_section=ASSESSMENT_SECTION     Assessment configuration section to use
+  -x CYHY_CONFIG --cyhy_config=CYHY_CONFIG                          CyHy MongoDB configuration to use
+  -y SCAN_CONFIG --scan_config=SCAN_CONFIG                          Scan MongoDB configuration to use
+  -z ASSESSMENT_CONFIG --assessment_config=ASSESSMENT_CONFIG        Assessment MongoDB configuration to use
   -v --verbose                                                      Show verbose output
-  -f --federal                                                      Returns only Federal requestDocs
   -a --aws                                                          Output results to s3 bucket
   -c CONFIG_FILE --config=CONFIG_FILE                               Configuration file for this script
   -d DATE --date=DATE                                               Specific date to export data from in form: %Y-%m-%d (eg. 2018-12-31) NOTE that this date is in UTC
@@ -26,16 +25,20 @@ import sys
 from ConfigParser import SafeConfigParser
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+import dateutil.tz as tz
 from docopt import docopt
 import boto3
 import gnupg    # pip install python-gnupg
 import os
+import json
+import bson
+import netaddr
+import pymongo
 from pytz import timezone
 import subprocess
 import tarfile
 import time
-from cyhy.db import database
-from cyhy.util import util
+from mongo_db_from_config import db_from_config
 from dmarc import get_dmarc_data
 
 BUCKET_NAME = 'ncats-moe-data'
@@ -45,6 +48,27 @@ MAX_ENTRIES = 10
 DEFAULT_ES_RETRIEVE_SIZE = 10000
 DAYS_OF_DMARC_REPORTS = 1
 PAGE_SIZE = 100000  # Number of documents per query
+
+
+def custom_json_handler(obj):
+    """ Format a provided JSON object. """
+    if hasattr(obj, 'isoformat'):
+        return obj.isoformat()
+    elif type(obj) == bson.objectid.ObjectId:
+        return repr(obj)
+    elif type(obj) == netaddr.IPAddress:
+        return str(obj)
+    elif type(obj) == netaddr.IPNetwork:
+        return str(obj)
+    elif type(obj) == netaddr.IPSet:
+        return obj.iter_cidrs()
+    else:
+        raise TypeError('Object of type %s with value of %s is not JSON serializable' % (type(obj), repr(obj)))
+
+
+def to_json(obj):
+    """ Return a string representation of a formatted JSON. """
+    return json.dumps(obj, sort_keys=True, indent=4, default=custom_json_handler)
 
 
 def update_bucket(bucket_name, local_file, remote_file_name):
@@ -112,7 +136,7 @@ def query_data(collection, query, tbz_file, tbz_filename,
     count = collection.find(query, {'key': False}).count()
     while skips < count:
         # Pull documents between n and n + 100000
-        collection_file.write(util.to_json(list(collection.find(query, {'key': False}).skip(skips).limit(PAGE_SIZE))))
+        collection_file.write(to_json(list(collection.find(query, {'key': False}).skip(skips).limit(PAGE_SIZE))))
         skips += PAGE_SIZE
     collection_file.close()
     if count > PAGE_SIZE:
@@ -140,12 +164,12 @@ def main():
     __doc__ = re.sub('COMMAND_NAME', __file__, __doc__)
     args = docopt(__doc__, version='v0.0.1')
     if args['--cyhy_section']:
-        cyhy_db = database.db_from_config(args['--cyhy_section'])
+        cyhy_db = db_from_config(args['--cyhy_section'])
     if args['--scan_section']:
-        scan_db = database.db_from_config(args['--scan_section'])
+        scan_db = db_from_config(args['--scan_section'])
     if args['--assessment_section']:
-        assessment_db = database.db_from_config(args['--assessment_section'])
-    now = util.utcnow()
+        assessment_db = db_from_config(args['--assessment_section'])
+    now = datetime.now(tz.tzutc())
     # import IPython; IPython.embed() #<<< BREAKPOINT >>>
     # sys.exit(0)
 
@@ -194,12 +218,16 @@ def main():
         start_of_data_collection = now + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
         end_of_data_collection = start_of_data_collection + relativedelta(days=1)
 
-    if args['--federal']:
-        all_fed_descendants = cyhy_db.RequestDoc.get_all_descendants('FEDERAL')
-        orgs = list(set(all_fed_descendants) - ORGS_EXCLUDED)
-    else:
-        all_orgs = cyhy_db.RequestDoc.get_all_descendants('ROOT')
-        orgs = list(set(all_orgs) - ORGS_EXCLUDED)
+    # Get a list of all non-retired orgs
+    org_filter = {
+            '_id': {'$ne': 'ROOT'},
+            'retired': {'$ne': True}
+    }
+    all_orgs = []
+    results = cyhy_db['requests'].find(org_filter, {'_id': 1})
+    for doc in results:
+        all_orgs.append(doc['_id'])
+    orgs = list(set(all_orgs) - ORGS_EXCLUDED)
 
     # Create tar/bzip2 file for writing
     tbz_filename = 'cyhy_extract_{!s}.tbz'.format(end_of_data_collection.isoformat().replace(':', '').split('.')[0])
@@ -300,7 +328,7 @@ def main():
                        tbz_file, tbz_filename, end_of_data_collection)
 
     # Note that we use the elasticsearch AWS profile here
-    json_data = util.to_json(get_dmarc_data(ES_REGION, ES_URL,
+    json_data = to_json(get_dmarc_data(ES_REGION, ES_URL,
                                             DAYS_OF_DMARC_REPORTS,
                                             ES_RETRIEVE_SIZE,
                                             ES_AWS_CONFIG_SECTION_NAME))
