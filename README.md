@@ -29,13 +29,13 @@ pip install -r requirements.txt
 ### cyhy-data-extract Usage and Examples ###
 
 ```bash
-python2.7 cyhy-data-extract.py --cyhy_section cyhy_section --config cyhy-data-extract.cfg
-python2.7 cyhy-data-extract.py --scan_section scan_section --config cyhy-data-extract.cfg
-python2.7 cyhy-data-extract.py --assessment_section assessment_section --config cyhy-data-extract.cfg
-python2.7 cyhy-data-extract.py --cyhy_section cyhy_section --scan_section scan_section --config cyhy-data-extract.cfg
-python2.7 cyhy-data-extract.py --cyhy_section cyhy_section --scan_section scan_section --aws --config cyhy-data-extract.cfg
-python2.7 cyhy-data-extract.py --cyhy_section cyhy_section --scan_section scan_section --aws --config cyhy-data-extract.cfg --date 2019-01-25
-python2.7 cyhy-data-extract.py --cyhy_section cyhy_section --scan_section scan_section --assessment_section assessment_section --aws --config cyhy-data-extract.cfg --date 2019-01-25
+python2.7 cyhy-data-extract.py --cyhy_config cyhy_config --config cyhy-data-extract.cfg
+python2.7 cyhy-data-extract.py --scan_config scan_config --config cyhy-data-extract.cfg
+python2.7 cyhy-data-extract.py --assessment_config assessment_config --config cyhy-data-extract.cfg
+python2.7 cyhy-data-extract.py --cyhy_config cyhy_config --scan_config scan_config --config cyhy-data-extract.cfg
+python2.7 cyhy-data-extract.py --cyhy_config cyhy_config --scan_config scan_config --aws --config cyhy-data-extract.cfg
+python2.7 cyhy-data-extract.py --cyhy_config cyhy_config --scan_config scan_config --aws --config cyhy-data-extract.cfg --date 2019-01-25
+python2.7 cyhy-data-extract.py --cyhy_config cyhy_config --scan_config scan_config --assessment_config assessment_config --aws --config cyhy-data-extract.cfg --date 2019-01-25
 ```
 Note: The section names are taken from the cyhy.conf
 
@@ -45,18 +45,17 @@ Note: The section names are taken from the cyhy.conf
 Create compressed, encrypted, signed extract file with Federal CyHy data for integration with the Weathermap project.
 
 Usage:
-  COMMAND_NAME [--cyhy_section CYHY_SECTION] [--scan_section SCAN_SECTION] [--assessment_section ASSESSMENT_SECTION] [-v | --verbose] [-f | --federal] [-a | --aws] --config CONFIG_FILE [--date DATE]
+  COMMAND_NAME [--cyhy_config CYHY_config] [--scan_config SCAN_config] [--assessment_config ASSESSMENT_config] [-v | --verbose] [-a | --aws] --config CONFIG_FILE [--date DATE]
   COMMAND_NAME (-h | --help)
   COMMAND_NAME --version
 
 Options:
   -h --help                                                         Show this screen
   --version                                                         Show version
-  -x CYHY_SECTION --cyhy_section=CYHY_SECTION                       CyHy configuration section to use
-  -y SCAN_SECTION --scan_section=SCAN_SECTION                       Scan configuration section to use
-  -z ASSESSMENT_SECTION --assessment_section=ASSESSMENT_SECTION     Assessment configuration section to use
+  -x CYHY_CONFIG --cyhy_config=CYHY_CONFIG                       CyHy configuration section to use
+  -y SCAN_CONFIG --scan_config=SCAN_CONFIG                       Scan configuration section to use
+  -z ASSESSMENT_CONFIG --assessment_config=ASSESSMENT_CONFIG     Assessment configuration section to use
   -v --verbose                                                      Show verbose output
-  -f --federal                                                      Returns only Federal requestDocs
   -a --aws                                                          Output results to s3 bucket
   -c CONFIG_FILE --config=CONFIG_FILE                               Configuration file for this script
   -d DATE --date=DATE                                               Specific date to export data from in form: %Y-%m-%d (eg. 2018-12-31) NOTE that this date is in UTC
