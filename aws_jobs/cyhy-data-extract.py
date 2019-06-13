@@ -325,9 +325,9 @@ def main():
 
     # Note that we use the elasticsearch AWS profile here
     json_data = to_json(get_dmarc_data(ES_REGION, ES_URL,
-                                            DAYS_OF_DMARC_REPORTS,
-                                            ES_RETRIEVE_SIZE,
-                                            ES_AWS_CONFIG_SECTION_NAME))
+                                       DAYS_OF_DMARC_REPORTS,
+                                       ES_RETRIEVE_SIZE,
+                                       ES_AWS_CONFIG_SECTION_NAME))
     json_filename = '{!s}_{!s}.json'.format('DMARC',
                                             end_of_data_collection.isoformat().replace(':', '').split('.')[0])
     dmarc_file = open(json_filename, 'w')
