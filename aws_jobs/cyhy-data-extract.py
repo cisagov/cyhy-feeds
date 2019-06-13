@@ -26,7 +26,6 @@ from ConfigParser import SafeConfigParser
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import dateutil.tz as tz
-from docopt import docopt
 import json
 import os
 import subprocess
@@ -35,6 +34,7 @@ import time
 
 import boto3
 import bson
+from docopt import docopt
 import gnupg    # pip install python-gnupg
 from mongo_db_from_config import db_from_config
 import netaddr
