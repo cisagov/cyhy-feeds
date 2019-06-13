@@ -3,7 +3,7 @@
 data for integration with the Weathermap project.
 
 Usage:
-  COMMAND_NAME [--cyhy_config CYHY_CONFIG] [--scan_config SCAN_CONFIG] [--assessment_config ASSESSMENT_CONFIG] [-v | --verbose] [-a | --aws] --config CONFIG_FILE [--date DATE]
+  COMMAND_NAME [--cyhy-config CYHY_CONFIG] [--scan-config SCAN_CONFIG] [--assessment-config ASSESSMENT_CONFIG] [-v | --verbose] [-a | --aws] --config CONFIG_FILE [--date DATE]
   COMMAND_NAME (-h | --help)
   COMMAND_NAME --version
 
@@ -163,12 +163,12 @@ def main():
     global __doc__
     __doc__ = re.sub('COMMAND_NAME', __file__, __doc__)
     args = docopt(__doc__, version='v0.0.1')
-    if args['--cyhy_section']:
-        cyhy_db = db_from_config(args['--cyhy_section'])
-    if args['--scan_section']:
-        scan_db = db_from_config(args['--scan_section'])
-    if args['--assessment_section']:
-        assessment_db = db_from_config(args['--assessment_section'])
+    if args['--cyhy-config']:
+        cyhy_db = db_from_config(args['--cyhy-config'])
+    if args['--scan-config']:
+        scan_db = db_from_config(args['--scan-config'])
+    if args['--assessment-config']:
+        assessment_db = db_from_config(args['--assessment-config'])
     now = datetime.now(tz.tzutc())
     # import IPython; IPython.embed() #<<< BREAKPOINT >>>
     # sys.exit(0)
@@ -223,10 +223,7 @@ def main():
             '_id': {'$ne': 'ROOT'},
             'retired': {'$ne': True}
     }
-    all_orgs = []
-    results = cyhy_db['requests'].find(org_filter, {'_id': 1})
-    for doc in results:
-        all_orgs.append(doc['_id'])
+    all_orgs = cyhy_db['requests'].find(org_filter, {'_id': 1}).distinct('_id')
     orgs = list(set(all_orgs) - ORGS_EXCLUDED)
 
     # Create tar/bzip2 file for writing
@@ -313,15 +310,15 @@ def main():
         'findings': {}
     }
 
-    if args['--cyhy_section']:
+    if args['--cyhy-config']:
         for collection in cyhy_collection:
             query_data(cyhy_db[collection], cyhy_collection[collection],
                        tbz_file, tbz_filename, end_of_data_collection)
-    if args['--scan_section']:
+    if args['--scan-config']:
         for collection in scan_collection:
             query_data(scan_db[collection], scan_collection[collection],
                        tbz_file, tbz_filename, end_of_data_collection)
-    if args['--assessment_section']:
+    if args['--assessment-config']:
         for collection in assessment_collection:
             query_data(assessment_db[collection],
                        assessment_collection[collection],
