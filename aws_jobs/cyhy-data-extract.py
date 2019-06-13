@@ -29,15 +29,17 @@ import dateutil.tz as tz
 from docopt import docopt
 import json
 import os
+import subprocess
+import tarfile
+import time
+
 import boto3
 import bson
 import gnupg    # pip install python-gnupg
 from mongo_db_from_config import db_from_config
 import netaddr
 from pytz import timezone
-import subprocess
-import tarfile
-import time
+
 from dmarc import get_dmarc_data
 
 BUCKET_NAME = 'ncats-moe-data'
@@ -218,11 +220,7 @@ def main():
         end_of_data_collection = start_of_data_collection + relativedelta(days=1)
 
     # Get a list of all non-retired orgs
-    org_filter = {
-            '_id': {'$ne': 'ROOT'},
-            'retired': {'$ne': True}
-    }
-    all_orgs = cyhy_db['requests'].find(org_filter, {'_id': 1}).distinct('_id')
+    all_orgs = cyhy_db['requests'].find({'retired': {'$ne': True}}, {'_id': 1}).distinct('_id')
     orgs = list(set(all_orgs) - ORGS_EXCLUDED)
 
     # Create tar/bzip2 file for writing
