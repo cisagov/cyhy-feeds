@@ -52,9 +52,9 @@ Usage:
 Options:
   -h --help                                                         Show this screen
   --version                                                         Show version
-  -x CYHY_CONFIG --cyhy-config=CYHY_CONFIG                       CyHy configuration section to use
-  -y SCAN_CONFIG --scan-config=SCAN_CONFIG                       Scan configuration section to use
-  -z ASSESSMENT_CONFIG --assessment-config=ASSESSMENT_CONFIG     Assessment configuration section to use
+  -x CYHY_CONFIG --cyhy-config=CYHY_CONFIG                          CyHy configuration section to use
+  -y SCAN_CONFIG --scan-config=SCAN_CONFIG                          Scan configuration section to use
+  -z ASSESSMENT_CONFIG --assessment-config=ASSESSMENT_CONFIG        Assessment configuration section to use
   -v --verbose                                                      Show verbose output
   -a --aws                                                          Output results to s3 bucket
   -c CONFIG_FILE --config=CONFIG_FILE                               Configuration file for this script
