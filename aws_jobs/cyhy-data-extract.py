@@ -10,9 +10,9 @@ Usage:
 Options:
   -h --help                                                         Show this screen
   --version                                                         Show version
-  -x CYHY_CONFIG --cyhy_config=CYHY_CONFIG                          CyHy MongoDB configuration to use
-  -y SCAN_CONFIG --scan_config=SCAN_CONFIG                          Scan MongoDB configuration to use
-  -z ASSESSMENT_CONFIG --assessment_config=ASSESSMENT_CONFIG        Assessment MongoDB configuration to use
+  -x CYHY_CONFIG --cyhy-config=CYHY_CONFIG                          CyHy MongoDB configuration to use
+  -y SCAN_CONFIG --scan-config=SCAN_CONFIG                          Scan MongoDB configuration to use
+  -z ASSESSMENT_CONFIG --assessment-config=ASSESSMENT_CONFIG        Assessment MongoDB configuration to use
   -v --verbose                                                      Show verbose output
   -a --aws                                                          Output results to s3 bucket
   -c CONFIG_FILE --config=CONFIG_FILE                               Configuration file for this script
