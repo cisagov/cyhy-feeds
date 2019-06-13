@@ -19,6 +19,7 @@ setup(
         "boto3 >= 1.8.7",
         "python-gnupg >= 0.4.3",
         "requests >= 2.18.4",
-        "requests-aws4auth >= 0.9"
+        "requests-aws4auth >= 0.9",
+        "mongo-db-from-config >= 0.0.1"
     ]
 )
