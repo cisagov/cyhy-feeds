@@ -33,7 +33,6 @@ import os
 import json
 import bson
 import netaddr
-import pymongo
 from pytz import timezone
 import subprocess
 import tarfile
