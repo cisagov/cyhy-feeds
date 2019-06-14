@@ -7,12 +7,12 @@
 
 cyhy-feeds consists of two parts; the extractor and the retriever
 
-`cyhy-data-extract` compresses the data, signs the compressed file,
-encrypts the file, and pushes the encrypted compressed file to a
-bucket in S3 using AWS creds.
+`cyhy-data-extract` retrieve and compress the specified data, sign the compressed
+file, encrypt the file, and optionally push the encrypted compressed file to an
+S3 bucket using AWS credentials.
 
-`cyhy-data-retriever` pulls the file from s3, decrypts the file, and
-decompresses it.
+`cyhy-data-retriever` take a provided file (optionally stored on an S3 bucket),
+decrypt it, and then decompresses it to local storage.
 
 ## Getting Started ##
 
@@ -31,21 +31,21 @@ pip install -r requirements.txt
 ### cyhy-data-extract Usage and Examples ###
 
 Extract CyHy data for the current day using the MongoDB configuration in `cyhy.yml`
-and use the runtime configuration in `cyhy-data-extract.cfg`.
+and the runtime configuration in `cyhy-data-extract.cfg`.
 
 ```console
 python2.7 cyhy-data-extract.py --cyhy-config cyhy.yml --config cyhy-data-extract.cfg
 ```
 
 Extract scan data for the current day using the MongoDB configuration in 'scan.yml'
-and use the runtime configuration in `cyhy-data-extract.cfg`.
+and the runtime configuration in `cyhy-data-extract.cfg`.
 
 ```console
 python2.7 cyhy-data-extract.py --scan-config scan.yml --config cyhy-data-extract.cfg
 ```
 
 Extract assessment data for the current day using the MongoDB configuration in
-`assessment.yml` and use the runtime configuration in `cyhy-data-extract.cfg`.
+`assessment.yml` and the runtime configuration in `cyhy-data-extract.cfg`.
 
 ```console
 python2.7 cyhy-data-extract.py --assessment-config assessment.yml --config cyhy-data-extract.cfg
@@ -127,6 +127,9 @@ Options:
 
 ### cyhy-data-retriever Usage and Examples ###
 
+Retrieve the data stored in file `cyhy_extract_2019-01-25T000000+0000.tbz.gpg`
+residing on AWS using the runtime configuration in `cyhy-data-retriever.cfg`.
+
 ```console
   cyhy-data-retriever --filename cyhy_extract_2019-01-25T000000+0000.tbz.gpg --aws
     --config cyhy-data-retriever.cfg
@@ -155,7 +158,7 @@ Options:
   -f EXTRACT_FILENAME --filename=EXTRACT_FILENAME   Name of extract file to retrieve
   -v --verbose                                      Show verbose output
   -c CONFIG_FILE --config=CONFIG_FILE               Configuration file for this script
-  -a --aws                                          Output results to s3 bucket
+  -a --aws                                          Output results to S3 bucket
 
 ```
 
