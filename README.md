@@ -17,11 +17,10 @@ decompresses it.
 ## Getting Started ##
 
 `cyhy-data-extract` requires **Python 2** because it has not been updated
-to remove all Python 2 requirements. Python 3 is not supported at this
-time. Note: cyhy-core is in a private repository at this time so
-cyhy-feeds cannot be installed without access to this repo
+to remove all Python 2 requirements. Python 3 is not officially supported
+at this time.
 
-`cyhy-data-extract` can run as either Python 2 or Python 3.
+`cyhy-data-retriever` can run as either Python 2 or Python 3.
 
 To run the tool locally first install the requirements:
 
@@ -31,18 +30,61 @@ pip install -r requirements.txt
 
 ### cyhy-data-extract Usage and Examples ###
 
+Extract CyHy data for the current day using the MongoDB configuration in `cyhy.yml`
+and use the runtime configuration in `cyhy-data-extract.cfg`.
+
 ```console
-python2.7 cyhy-data-extract.py --cyhy-config cyhy_config --config cyhy-data-extract.cfg
-python2.7 cyhy-data-extract.py --scan-config scan_config --config cyhy-data-extract.cfg
-python2.7 cyhy-data-extract.py --assessment-config assessment_config --config cyhy-data-extract.cfg
-python2.7 cyhy-data-extract.py --cyhy-config cyhy_config --scan-config scan_config
+python2.7 cyhy-data-extract.py --cyhy-config cyhy.yml --config cyhy-data-extract.cfg
+```
+
+Extract scan data for the current day using the MongoDB configuration in 'scan.yml'
+and use the runtime configuration in `cyhy-data-extract.cfg`.
+
+```console
+python2.7 cyhy-data-extract.py --scan-config scan.yml --config cyhy-data-extract.cfg
+```
+
+Extract assessment data for the current day using the MongoDB configuration in
+`assessment.yml` and use the runtime configuration in `cyhy-data-extract.cfg`.
+
+```console
+python2.7 cyhy-data-extract.py --assessment-config assessment.yml --config cyhy-data-extract.cfg
+```
+
+Extract CyHy and scan data for the current day using the MongoDB configurations
+in `cyhy.yml` and `scan.yml`, respectively, and use the runtime configuration in
+`cyhy-data-extract.cfg`.
+
+```console
+python2.7 cyhy-data-extract.py --cyhy-config cyhy.yml --scan-config scan.yml
   --config cyhy-data-extract.cfg
-python2.7 cyhy-data-extract.py --cyhy-config cyhy_config --scan-config scan_config
+```
+
+Extract CyHy and scan data for the current day using the MongoDB configurations
+in `cyhy.yml` and `scan.yml`, upload the results to AWS, and use the runtime
+configuration in `cyhy-data-extract.cfg`.
+
+```console
+python2.7 cyhy-data-extract.py --cyhy-config cyhy.yml --scan-config scan.yml
   --aws --config cyhy-data-extract.cfg
-python2.7 cyhy-data-extract.py --cyhy-config cyhy_config --scan-config scan_config
+```
+
+Extract CyHy and scan data for January 25th, 2019 using the MongoDB configurations
+in `cyhy.yml` and `scan.yml`, upload the results to AWS, and use the runtime
+configuration in `cyhy-data-extract.cfg`.
+
+```console
+python2.7 cyhy-data-extract.py --cyhy-config cyhy.yml --scan-config scan.yml
   --aws --config cyhy-data-extract.cfg --date 2019-01-25
-python2.7 cyhy-data-extract.py --cyhy-config cyhy_config --scan-config scan_config
-  --assessment-config assessment_config --aws --config cyhy-data-extract.cfg
+```
+
+Extract CyHy, scan, and assessment data for January 25th, 2019 using the MongoDB
+configurations in `cyhy.yml`, `scan.yml`, and `assessment.yml`, upload the results
+to AWS, and use the runtime configuration in `cyhy-data-extract.cfg`.
+
+```console
+python2.7 cyhy-data-extract.py --cyhy-config cyhy.yml --scan-config scan.yml
+  --assessment-config assessment.yml --aws --config cyhy-data-extract.cfg
   --date 2019-01-25
 ```
 
@@ -75,7 +117,8 @@ Options:
                                                                   for this script
   -d DATE --date=DATE                                             Specific date to
                                                                   export data from
-                                                                  in form: %Y-%m-%d
+                                                                  in form:
+                                                                  %YYYY-%MM-%DD
                                                                   (eg. 2018-12-31)
                                                                   NOTE that this
                                                                   date is in UTC
