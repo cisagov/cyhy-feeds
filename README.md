@@ -8,8 +8,8 @@
 cyhy-feeds consists of two parts; the extractor and the retriever
 
 `cyhy-data-extract` retrieve and compress the specified data, sign the compressed
-file, encrypt the file, and optionally push the encrypted compressed file to an
-S3 bucket using AWS credentials.
+file, encrypt the file, and optionally push the encrypted, compressed file to an
+S3 bucket using provided AWS credentials.
 
 `cyhy-data-retriever` take a provided file (optionally stored on an S3 bucket),
 decrypt it, and then decompresses it to local storage.
