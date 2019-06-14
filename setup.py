@@ -49,5 +49,5 @@ setup(
         "requests >= 2.18.4",
         "requests-aws4auth >= 0.9",
     ],
-    extras_require={"test": ["pre-commit", "pytest", "pytest-cov", "coveralls"]}
+    extras_require={"test": ["pre-commit", "pytest", "pytest-cov", "coveralls"]},
 )

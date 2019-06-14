@@ -13,11 +13,9 @@ from requests_aws4auth import AWS4Auth
 DEFAULT_ES_RETRIEVE_SIZE = 10000
 
 
-def query_elasticsearch(session,
-                        es_region,
-                        es_url,
-                        since,
-                        es_retrieve_size=DEFAULT_ES_RETRIEVE_SIZE):
+def query_elasticsearch(
+    session, es_region, es_url, since, es_retrieve_size=DEFAULT_ES_RETRIEVE_SIZE
+):
     """Query Elasticsearch for all DMARC aggregate reports received since a given time.
 
     Parameters:
