@@ -1,4 +1,4 @@
-# Cyhy-feeds 📥 📤 #
+# Cyber Hygiene Feeds 📥 📤 #
 
 [![Build Status](https://travis-ci.com/cisagov/cyhy-feeds.svg?branch=develop)](https://travis-ci.com/cisagov/cyhy-feeds)
 [![Coverage Status](https://coveralls.io/repos/github/cisagov/cyhy-feeds/badge.svg?branch=develop)](https://coveralls.io/github/cisagov/cyhy-feeds?branch=develop)
