@@ -30,6 +30,45 @@ pip install -r requirements.txt
 
 ### cyhy-data-extract Usage and Examples ###
 
+#### cyhy-data-extract Usage ####
+
+```console
+Create compressed, encrypted, signed extract file with Federal CyHy data for
+integration with the Weathermap project.
+
+Usage:
+  COMMAND_NAME [--cyhy-config CYHY_CONFIG] [--scan-config SCAN_CONFIG]
+    [--assessment-config ASSESSMENT_CONFIG] [-v | --verbose] [-a | --aws]
+    --config CONFIG_FILE [--date DATE]
+  COMMAND_NAME (-h | --help)
+  COMMAND_NAME --version
+
+Options:
+  -h --help                                                       Show this screen
+  --version                                                       Show version
+  -x CYHY_CONFIG --cyhy-config=CYHY_CONFIG                        CyHy configuration
+                                                                  file to use
+  -y SCAN_CONFIG --scan-config=SCAN_CONFIG                        Scan configuration
+                                                                  file to use
+  -z ASSESSMENT_CONFIG --assessment-config=ASSESSMENT_CONFIG      Assessment configuration
+                                                                  file to use
+  -v --verbose                                                    Show verbose output
+  -a --aws                                                        Output results
+                                                                  to S3 bucket
+  -c CONFIG_FILE --config=CONFIG_FILE                             Configuration file
+                                                                  for this script
+  -d DATE --date=DATE                                             Specific date to
+                                                                  export data from
+                                                                  in form:
+                                                                  %YYYY-%MM-%DD
+                                                                  (eg. 2018-12-31)
+                                                                  NOTE that this
+                                                                  date is in UTC
+
+```
+
+#### cyhy-data-extract Examples ####
+
 Extract CyHy data for the current day using the MongoDB configuration in `cyhy.yml`
 and the runtime configuration in `cyhy-data-extract.cfg`.
 
@@ -88,54 +127,9 @@ python2.7 cyhy-data-extract.py --cyhy-config cyhy.yml --scan-config scan.yml
   --date 2019-01-25
 ```
 
-#### cyhy-data-extract Options ####
-
-```console
-Create compressed, encrypted, signed extract file with Federal CyHy data for
-integration with the Weathermap project.
-
-Usage:
-  COMMAND_NAME [--cyhy-config CYHY_CONFIG] [--scan-config SCAN_CONFIG]
-    [--assessment-config ASSESSMENT_CONFIG] [-v | --verbose] [-a | --aws]
-    --config CONFIG_FILE [--date DATE]
-  COMMAND_NAME (-h | --help)
-  COMMAND_NAME --version
-
-Options:
-  -h --help                                                       Show this screen
-  --version                                                       Show version
-  -x CYHY_CONFIG --cyhy-config=CYHY_CONFIG                        CyHy configuration
-                                                                  file to use
-  -y SCAN_CONFIG --scan-config=SCAN_CONFIG                        Scan configuration
-                                                                  file to use
-  -z ASSESSMENT_CONFIG --assessment-config=ASSESSMENT_CONFIG      Assessment configuration
-                                                                  file to use
-  -v --verbose                                                    Show verbose output
-  -a --aws                                                        Output results
-                                                                  to S3 bucket
-  -c CONFIG_FILE --config=CONFIG_FILE                             Configuration file
-                                                                  for this script
-  -d DATE --date=DATE                                             Specific date to
-                                                                  export data from
-                                                                  in form:
-                                                                  %YYYY-%MM-%DD
-                                                                  (eg. 2018-12-31)
-                                                                  NOTE that this
-                                                                  date is in UTC
-
-```
-
 ### cyhy-data-retriever Usage and Examples ###
 
-Retrieve the data stored in file `cyhy_extract_2019-01-25T000000+0000.tbz.gpg`
-residing on AWS using the runtime configuration in `cyhy-data-retriever.cfg`.
-
-```console
-  cyhy-data-retriever --filename cyhy_extract_2019-01-25T000000+0000.tbz.gpg --aws
-    --config cyhy-data-retriever.cfg
-```
-
-#### cyhy-data-retriever Options ####
+#### cyhy-data-retriever Usage ####
 
 ```console
 Retrieve a compressed, encrypted, signed extract file and
@@ -160,6 +154,16 @@ Options:
   -c CONFIG_FILE --config=CONFIG_FILE               Configuration file for this script
   -a --aws                                          Output results to S3 bucket
 
+```
+
+#### cyhy-data-retriever Examples ####
+
+Retrieve the data stored in file `cyhy_extract_2019-01-25T000000+0000.tbz.gpg`
+residing on AWS using the runtime configuration in `cyhy-data-retriever.cfg`.
+
+```console
+  cyhy-data-retriever --filename cyhy_extract_2019-01-25T000000+0000.tbz.gpg --aws
+    --config cyhy-data-retriever.cfg
 ```
 
 ### Extract Config File Parameters ###
