@@ -25,7 +25,6 @@ from ConfigParser import SafeConfigParser
 from datetime import datetime
 import json
 import os
-import subprocess
 import tarfile
 import time
 
@@ -37,6 +36,7 @@ from docopt import docopt
 import gnupg  # pip install python-gnupg
 from mongo_db_from_config import db_from_config
 import netaddr
+import pymongo
 from pytz import timezone
 
 from dmarc import get_dmarc_data
@@ -86,7 +86,8 @@ def create_dummy_files(output_dir):
     for n in range(1, 21):
         dummy_filename = "dummy_file_{!s}.gpg".format(n)
         full_path_dummy_filename = os.path.join(output_dir, dummy_filename)
-        subprocess.call(["touch", full_path_dummy_filename])
+        with open(full_path_dummy_filename, 'w'):
+            pass
         st = os.stat(full_path_dummy_filename)
         # Set file modification time to n days earlier than it was.
         # Note that there are 86400 seconds per day.
@@ -133,39 +134,62 @@ def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection
     )
     collection_file = open(json_filename, "w")
     # How many documents into a query that will be skipped
-    skips = 0
-    # Number of documents in a query
-    count = collection.find(query, {"key": False}).count()
-    while skips < count:
-        # Pull documents between n and n + 100000
-        collection_file.write(
-            to_json(
-                list(
-                    collection.find(query, {"key": False}).skip(skips).limit(PAGE_SIZE)
-                )
-            )
-        )
-        skips += PAGE_SIZE
+    # skips = 0
+    # # Number of documents in a query
+    # count = collection.find(query, {"key": False}).count()
+    # while skips < count:
+    #     # Pull documents between n and n + 100000
+    #     collection_file.write(
+    #         to_json(
+    #             list(
+    #                 collection.find(query, {"key": False}).skip(skips).limit(PAGE_SIZE)
+    #             )
+    #         )
+    #     )
+    #     skips += PAGE_SIZE
+    # collection_file.close()
+    # if count > PAGE_SIZE:
+    #     # The first sed removes the ][ created by chunking the queries
+    #     # then the 2nd sed adds , to the document at the end of a
+    #     # chunked list
+    #     # If on MAC you will need gsed and gawk.
+    #     os.system(
+    #         r'sed -i "/\]\[/d" {} ; sed -i "s/\}}$/\}}\,/g" {} ; '.format(
+    #             json_filename, json_filename
+    #         )
+    #     )
+    #     # The previous sed will leave a }, at the last document in the
+    #     # list which is removed with this aws_access_key_id
+    #     os.system(
+    #         r"""awk 'NR==FNR{{tgt=NR-1;next}} (FNR==tgt) && /\}},/ {{ $1="    }}" }} 1' {} {} > {}.bak""".format(
+    #             json_filename, json_filename, json_filename
+    #         )
+    #     )
+    #     # This is a workaround for inplace
+    #     os.system("mv {}.bak {}".format(json_filename, json_filename))
+
+    collection_file.write("[")
+    last_id = None
+    while True:
+        if last_id == None:
+            result = collection.find(query, {'key': False}, sort=[('_id', pymongo.ASCENDING)]).limit(PAGE_SIZE)
+        else:
+            query['_id'] = {'$gt': last_id}
+            result = collection.find(query, {'key': False}, sort=[('_id', pymongo.ASCENDING)]).limit(PAGE_SIZE)
+
+        for doc in result:
+            last_id = doc['_id']
+            collection_file.write(util.to_json([doc])[1:-2])
+            collection_file.write(",")
+
+        if result.retrieved == 0:
+            if last_id != None:
+                collection_file.seek(-1, os.SEEK_END)
+            break
+
+    collection_file.write('\n]')
     collection_file.close()
-    if count > PAGE_SIZE:
-        # The first sed removes the ][ created by chunking the queries
-        # then the 2nd sed adds , to the document at the end of a
-        # chunked list
-        # If on MAC you will need gsed and gawk.
-        os.system(
-            r'sed -i "/\]\[/d" {} ; sed -i "s/\}}$/\}}\,/g" {} ; '.format(
-                json_filename, json_filename
-            )
-        )
-        # The previous sed will leave a }, at the last document in the
-        # list which is removed with this aws_access_key_id
-        os.system(
-            r"""awk 'NR==FNR{{tgt=NR-1;next}} (FNR==tgt) && /\}},/ {{ $1="    }}" }} 1' {} {} > {}.bak""".format(
-                json_filename, json_filename, json_filename
-            )
-        )
-        # This is a workaround for inplace
-        os.system("mv {}.bak {}".format(json_filename, json_filename))
+
     print("Finished writing ", collection.name, " to file.")
     tbz_file.add(json_filename)
     print(" Added {!s} to {!s}".format(json_filename, tbz_filename))
