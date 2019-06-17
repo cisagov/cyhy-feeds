@@ -5,14 +5,14 @@
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/cyhy-feeds.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/cyhy-feeds/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/cyhy-feeds.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/cyhy-feeds/context:python)
 
-cyhy-feeds consists of two parts; the extractor and the retriever
+cyhy-feeds consists of two parts: the extractor and the retriever.
 
 `cyhy-data-extract` retrieve and compress the specified data, sign the compressed
 file, encrypt the file, and optionally push the encrypted, compressed file to an
 S3 bucket using provided AWS credentials.
 
-`cyhy-data-retriever` take a provided file (optionally stored on an S3 bucket),
-decrypt it, and then decompresses it to local storage.
+`cyhy-data-retriever` take a provided file (optionally stored in an S3 bucket),
+decrypt it, and then decompress it to local storage.
 
 ## Getting Started ##
 
