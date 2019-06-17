@@ -18,7 +18,8 @@ def query_elasticsearch(
 ):
     """Query Elasticsearch for all DMARC aggregate reports received since a given time.
 
-    Parameters:
+    Parameters
+    ----------
     session : boto3.session.Session
     The boto3 session.
 
@@ -34,11 +35,13 @@ def query_elasticsearch(
     es_retrieve_size : int
     The number of records to retrieve from Elasticsearch per request.
 
-    Returns:
+    Returns
+    -------
     list : a list of all DMARC aggregate reports received in the past
     seven days
 
-    Throws:
+    Throws
+    ------
     requests.exceptions.RequestException: If an error is returned
     by Elasticsearch.
 
@@ -137,7 +140,8 @@ def get_dmarc_data(
 ):
     """Query Elasticsearch for all DMARC aggregate reports received since a given time.
 
-    Parameters:
+    Parameters
+    ----------
     es_region : str
     The AWS region in which the DMARC Elasticsearch database resides.
 
@@ -154,11 +158,13 @@ def get_dmarc_data(
     aws_profile : str
     The name of the AWS profile to use.
 
-    Returns:
+    Returns
+    -------
     dict : a dict consisting of data for all DMARC aggregate reports
     received in the specified time frame
 
-    Throws:
+    Throws
+    ------
     requests.exceptions.RequestException: If an error is returned
     by Elasticsearch.
 
