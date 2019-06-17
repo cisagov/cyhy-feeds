@@ -2,7 +2,7 @@
 """Retrieve a compressed, encrypted, signed extract file and verify/decrypt/uncompress it.
 
 NOTES:
- * the python modules below must be installed for the script to work
+ * The python modules below must be installed for the script to work
  * This script expects to operate on a GPG-encrypted bzip2 tar file: e.g. filename.tbz.gpg
 
 Usage:

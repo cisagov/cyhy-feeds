@@ -176,7 +176,7 @@ def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection
 
 
 def main():
-    """Retrieve data, aggreate into a compressed archive, and encrypt it to store or upload to S#."""
+    """Retrieve data, aggreate into a compressed archive, and encrypt it to store or upload to S3."""
     global __doc__
     __doc__ = re.sub("COMMAND_NAME", __file__, __doc__)
     args = docopt(__doc__, version="v0.0.1")
@@ -211,7 +211,7 @@ def main():
     # Check if OUTPUT_DIR exists; if not, bail out
     if not os.path.exists(OUTPUT_DIR):
         print(
-            """ERROR: Output directory '{!s}' does not exist - exiting!""".format(
+            "ERROR: Output directory '{!s}' does not exist - exiting!".format(
                 OUTPUT_DIR
             )
         )
