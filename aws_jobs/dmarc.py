@@ -1,3 +1,4 @@
+"""Utility functions to retrieve data from ElasticSearch and DMARC."""
 # standard python libraries
 from datetime import datetime, timedelta
 import logging
@@ -12,10 +13,10 @@ from requests_aws4auth import AWS4Auth
 DEFAULT_ES_RETRIEVE_SIZE = 10000
 
 
-def query_elasticsearch(session, es_region, es_url, since,
-                        es_retrieve_size=DEFAULT_ES_RETRIEVE_SIZE):
-    """Query Elasticsearch for all DMARC aggregate reports received
-    since a given time.
+def query_elasticsearch(
+    session, es_region, es_url, since, es_retrieve_size=DEFAULT_ES_RETRIEVE_SIZE
+):
+    """Query Elasticsearch for all DMARC aggregate reports received since a given time.
 
     Parameters
     ----------
@@ -43,29 +44,33 @@ def query_elasticsearch(session, es_region, es_url, since,
     ------
     requests.exceptions.RequestException: If an error is returned
     by Elasticsearch.
+
     """
     ans = None
 
     # Construct the auth from the AWS credentials
     aws_credentials = session.get_credentials()
-    awsauth = AWS4Auth(aws_credentials.access_key,
-                       aws_credentials.secret_key,
-                       es_region, 'es',
-                       session_token=aws_credentials.token)
+    awsauth = AWS4Auth(
+        aws_credentials.access_key,
+        aws_credentials.secret_key,
+        es_region,
+        "es",
+        session_token=aws_credentials.token,
+    )
     # Compute since in seconds since the epoch
     since_unix = (since - datetime(1970, 1, 1)).total_seconds()
     # Now construct the query.
     query = {
-        'size': es_retrieve_size,
-        'query': {
-            'constant_score': {
-                'filter': {
-                    'bool': {
-                        'must': [
+        "size": es_retrieve_size,
+        "query": {
+            "constant_score": {
+                "filter": {
+                    "bool": {
+                        "must": [
                             {
-                                'range': {
-                                    'report_metadata.date_range.begin': {
-                                        'gte': since_unix
+                                "range": {
+                                    "report_metadata.date_range.begin": {
+                                        "gte": since_unix
                                     }
                                 }
                             }
@@ -73,7 +78,7 @@ def query_elasticsearch(session, es_region, es_url, since,
                     }
                 }
             }
-        }
+        },
     }
 
     # Now perform the query.  We have to do a little finagling with
@@ -81,17 +86,19 @@ def query_elasticsearch(session, es_region, es_url, since,
     # (I verified that we do run into that limit on occasion.)
     scroll_again = True
     scroll_id = None
-    logging.debug('Querying Elasticsearch database')
-    response = requests.get('{}/_search?scroll=1m'.format(es_url),
-                            auth=awsauth,
-                            json=query,
-                            headers={'Content-Type': 'application/json'},
-                            timeout=300)
+    logging.debug("Querying Elasticsearch database")
+    response = requests.get(
+        "{}/_search?scroll=1m".format(es_url),
+        auth=awsauth,
+        json=query,
+        headers={"Content-Type": "application/json"},
+        timeout=300,
+    )
     # Raises an exception if we didn't get back a 200 code
     response.raise_for_status()
 
-    hits = response.json()['hits']['hits']
-    scroll_id = response.json()['_scroll_id']
+    hits = response.json()["hits"]["hits"]
+    scroll_id = response.json()["_scroll_id"]
     ans = hits
 
     # If there were fewer hits than es_retrieve_size then there is no
@@ -99,22 +106,21 @@ def query_elasticsearch(session, es_region, es_url, since,
     if len(hits) < es_retrieve_size:
         scroll_again = False
 
-    es_url_no_index = re.sub('/[^/]*$', '', es_url)
+    es_url_no_index = re.sub("/[^/]*$", "", es_url)
     while scroll_again:
-        scroll_json = {
-            'scroll': '1m',
-            'scroll_id': scroll_id
-        }
-        logging.debug('Requesting another page of results from Elasticsearch')
-        response = requests.get('{}/_search/scroll'.format(es_url_no_index),
-                                auth=awsauth,
-                                json=scroll_json,
-                                headers={'Content-Type': 'application/json'},
-                                timeout=300)
+        scroll_json = {"scroll": "1m", "scroll_id": scroll_id}
+        logging.debug("Requesting another page of results from Elasticsearch")
+        response = requests.get(
+            "{}/_search/scroll".format(es_url_no_index),
+            auth=awsauth,
+            json=scroll_json,
+            headers={"Content-Type": "application/json"},
+            timeout=300,
+        )
         # Raises an exception if we didn't get back a 200 code
         response.raise_for_status()
 
-        hits = response.json()['hits']['hits']
+        hits = response.json()["hits"]["hits"]
         ans.extend(hits)
 
         # If there were fewer hits than es_retrieve_size then
@@ -125,11 +131,14 @@ def query_elasticsearch(session, es_region, es_url, since,
     return ans
 
 
-def get_dmarc_data(es_region, es_url, days,
-                   es_retrieve_size=DEFAULT_ES_RETRIEVE_SIZE,
-                   aws_profile="default"):
-    """Query Elasticsearch for all DMARC aggregate reports received
-    since a given time.
+def get_dmarc_data(
+    es_region,
+    es_url,
+    days,
+    es_retrieve_size=DEFAULT_ES_RETRIEVE_SIZE,
+    aws_profile="default",
+):
+    """Query Elasticsearch for all DMARC aggregate reports received since a given time.
 
     Parameters
     ----------
@@ -158,14 +167,14 @@ def get_dmarc_data(es_region, es_url, days,
     ------
     requests.exceptions.RequestException: If an error is returned
     by Elasticsearch.
+
     """
     since = datetime.utcnow() - timedelta(days=days)
 
-    logging.info('Creating AWS session')
+    logging.info("Creating AWS session")
     session = boto3.Session(profile_name=aws_profile)
 
-    logging.info('Retrieving DMARC data')
-    reports = query_elasticsearch(session, es_region, es_url, since,
-                                  es_retrieve_size)
+    logging.info("Retrieving DMARC data")
+    reports = query_elasticsearch(session, es_region, es_url, since, es_retrieve_size)
 
     return reports
