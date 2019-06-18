@@ -133,36 +133,35 @@ def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection
         collection.name,
         end_of_data_collection.isoformat().replace(":", "").split(".")[0],
     )
-    collection_file = open(json_filename, "w")
-    collection_file.write("[")
+    with open(json_filename, "w") as collection_file:
+        collection_file.write("[")
 
-    last_id = None
-    while True:
-        if last_id is None:
-            result = collection.find(
-                query, {"key": False}, sort=[("_id", pymongo.ASCENDING)]
-            ).limit(PAGE_SIZE)
-        else:
-            query["_id"] = {"$gt": last_id}
-            result = collection.find(
-                query, {"key": False}, sort=[("_id", pymongo.ASCENDING)]
-            ).limit(PAGE_SIZE)
+        last_id = None
+        while True:
+            if last_id is None:
+                result = collection.find(
+                    query, {"key": False}, sort=[("_id", pymongo.ASCENDING)]
+                ).limit(PAGE_SIZE)
+            else:
+                query["_id"] = {"$gt": last_id}
+                result = collection.find(
+                    query, {"key": False}, sort=[("_id", pymongo.ASCENDING)]
+                ).limit(PAGE_SIZE)
 
-        for doc in result:
-            collection_file.write(to_json([doc])[1:-2])
-            collection_file.write(",")
+            for doc in result:
+                collection_file.write(to_json([doc])[1:-2])
+                collection_file.write(",")
 
-        last_id = doc["_id"]
+            last_id = doc["_id"]
 
-        if result.retrieved == 0:
-            # If we have outputted documents then we have a trailing comma, so we
-            # need to roll back the file location to overwrite as we finish
-            if last_id is not None:
-                collection_file.seek(-1, os.SEEK_END)
-            break
+            if result.retrieved == 0:
+                # If we output documents then we have a trailing comma, so we need to
+                # roll back the file location by one byte to overwrite as we finish
+                if last_id is not None:
+                    collection_file.seek(-1, os.SEEK_END)
+                break
 
-    collection_file.write("\n]")
-    collection_file.close()
+        collection_file.write("\n]")
 
     print("Finished writing ", collection.name, " to file.")
     tbz_file.add(json_filename)
