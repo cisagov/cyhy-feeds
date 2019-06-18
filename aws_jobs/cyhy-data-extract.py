@@ -149,11 +149,14 @@ def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection
             ).limit(PAGE_SIZE)
 
         for doc in result:
-            last_id = doc["_id"]
             collection_file.write(to_json([doc])[1:-2])
             collection_file.write(",")
 
+        last_id = doc["_id"]
+
         if result.retrieved == 0:
+            # If we have outputted documents then we have a trailing comma, so we
+            # need to roll back the file location to overwrite as we finish
             if last_id is not None:
                 collection_file.seek(-1, os.SEEK_END)
             break
