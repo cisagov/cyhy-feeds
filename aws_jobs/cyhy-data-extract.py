@@ -36,7 +36,6 @@ from docopt import docopt
 import gnupg  # pip install python-gnupg
 from mongo_db_from_config import db_from_config
 import netaddr
-import pymongo
 from pytz import timezone
 
 from dmarc import get_dmarc_data
@@ -136,30 +135,15 @@ def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection
     with open(json_filename, "w") as collection_file:
         collection_file.write("[")
 
-        last_id = None
-        while True:
-            if last_id is None:
-                result = collection.find(
-                    query, {"key": False}, sort=[("_id", pymongo.ASCENDING)]
-                ).limit(PAGE_SIZE)
-            else:
-                query["_id"] = {"$gt": last_id}
-                result = collection.find(
-                    query, {"key": False}, sort=[("_id", pymongo.ASCENDING)]
-                ).limit(PAGE_SIZE)
+        result = collection.find(query, {"key": False})
+        for doc in result:
+            collection_file.write(to_json([doc])[1:-2])
+            collection_file.write(",")
 
-            for doc in result:
-                collection_file.write(to_json([doc])[1:-2])
-                collection_file.write(",")
-
-            last_id = doc["_id"]
-
-            if result.retrieved == 0:
-                # If we output documents then we have a trailing comma, so we need to
-                # roll back the file location by one byte to overwrite as we finish
-                if last_id is not None:
-                    collection_file.seek(-1, os.SEEK_END)
-                break
+        if result.retrieved == 0:
+            # If we output documents then we have a trailing comma, so we need to
+            # roll back the file location by one byte to overwrite as we finish
+            collection_file.seek(-1, os.SEEK_END)
 
         collection_file.write("\n]")
 
