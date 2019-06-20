@@ -133,14 +133,15 @@ def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection
         end_of_data_collection.isoformat().replace(":", "").split(".")[0],
     )
     with open(json_filename, "w") as collection_file:
-        collection_file.write("[")
-
         result = collection.find(query, {"key": False})
+
+        collection_file.write("[")
+        
         for doc in result:
             collection_file.write(to_json([doc])[1:-2])
             collection_file.write(",")
 
-        if result.retrieved == 0:
+        if result.retrieved != 0:
             # If we output documents then we have a trailing comma, so we need to
             # roll back the file location by one byte to overwrite as we finish
             collection_file.seek(-1, os.SEEK_END)
