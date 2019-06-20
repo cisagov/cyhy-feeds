@@ -25,7 +25,6 @@ from ConfigParser import SafeConfigParser
 from datetime import datetime
 import json
 import os
-import subprocess
 import tarfile
 import time
 
@@ -86,7 +85,9 @@ def create_dummy_files(output_dir):
     for n in range(1, 21):
         dummy_filename = "dummy_file_{!s}.gpg".format(n)
         full_path_dummy_filename = os.path.join(output_dir, dummy_filename)
-        subprocess.call(["touch", full_path_dummy_filename])
+        # Use open to create files.
+        with open(full_path_dummy_filename, "w"):
+            pass
         st = os.stat(full_path_dummy_filename)
         # Set file modification time to n days earlier than it was.
         # Note that there are 86400 seconds per day.
@@ -131,41 +132,28 @@ def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection
         collection.name,
         end_of_data_collection.isoformat().replace(":", "").split(".")[0],
     )
-    collection_file = open(json_filename, "w")
-    # How many documents into a query that will be skipped
-    skips = 0
-    # Number of documents in a query
-    count = collection.find(query, {"key": False}).count()
-    while skips < count:
-        # Pull documents between n and n + 100000
-        collection_file.write(
-            to_json(
-                list(
-                    collection.find(query, {"key": False}).skip(skips).limit(PAGE_SIZE)
-                )
-            )
-        )
-        skips += PAGE_SIZE
-    collection_file.close()
-    if count > PAGE_SIZE:
-        # The first sed removes the ][ created by chunking the queries
-        # then the 2nd sed adds , to the document at the end of a
-        # chunked list
-        # If on MAC you will need gsed and gawk.
-        os.system(
-            r'sed -i "/\]\[/d" {} ; sed -i "s/\}}$/\}}\,/g" {} ; '.format(
-                json_filename, json_filename
-            )
-        )
-        # The previous sed will leave a }, at the last document in the
-        # list which is removed with this aws_access_key_id
-        os.system(
-            r"""awk 'NR==FNR{{tgt=NR-1;next}} (FNR==tgt) && /\}},/ {{ $1="    }}" }} 1' {} {} > {}.bak""".format(
-                json_filename, json_filename, json_filename
-            )
-        )
-        # This is a workaround for inplace
-        os.system("mv {}.bak {}".format(json_filename, json_filename))
+
+    # The previous method converted all documents retrieved into a JSON string at
+    # once. This had a very large memory overhead and certain queries would
+    # consume enough memory in this process to crash the AWS instance being used
+    # before pagination was implemented. We are now retrieving and processing
+    # a single document at a time and the memory overhead is drastically lower.
+    with open(json_filename, "w") as collection_file:
+        result = collection.find(query, {"key": False})
+
+        collection_file.write("[")
+
+        for doc in result:
+            collection_file.write(to_json([doc])[1:-2])
+            collection_file.write(",")
+
+        if result.retrieved != 0:
+            # If we output documents then we have a trailing comma, so we need to
+            # roll back the file location by one byte to overwrite as we finish
+            collection_file.seek(-1, os.SEEK_END)
+
+        collection_file.write("\n]")
+
     print("Finished writing ", collection.name, " to file.")
     tbz_file.add(json_filename)
     print(" Added {!s} to {!s}".format(json_filename, tbz_filename))
@@ -187,8 +175,6 @@ def main():
     if args["--assessment-config"]:
         assessment_db = db_from_config(args["--assessment-config"])
     now = datetime.now(tz.tzutc())
-    # import IPython; IPython.embed() #<<< BREAKPOINT >>>
-    # sys.exit(0)
 
     # Read parameters in from config file
     config = SafeConfigParser()

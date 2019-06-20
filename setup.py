@@ -32,10 +32,10 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=[
         "boto3 >= 1.8.7",
+        "botocore >= 1.11.7",
         "docopt >= 0.6.2",
         "mongo-db-from-config >= 0.0.1",
         "netaddr >= 0.7.10",
-        "pymongo >= 2.9.2, < 3",
         "python-dateutil >= 2.2",
         "python-gnupg >= 0.4.3",
         "requests >= 2.18.4",
