@@ -132,11 +132,17 @@ def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection
         collection.name,
         end_of_data_collection.isoformat().replace(":", "").split(".")[0],
     )
+
+    # The previous method converted all documents retrieved into a JSON string at
+    # once. This had a very large memory overhead and certain queries would
+    # consume enough memory in this process to crash the AWS instance being used
+    # before pagination was implemented. We are now retrieving and processing
+    # a single document at a time and the memory overhead is drastically lower.
     with open(json_filename, "w") as collection_file:
         result = collection.find(query, {"key": False})
 
         collection_file.write("[")
-        
+
         for doc in result:
             collection_file.write(to_json([doc])[1:-2])
             collection_file.write(",")
