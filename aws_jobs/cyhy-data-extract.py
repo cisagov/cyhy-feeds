@@ -293,7 +293,15 @@ def main():
         },
     }
 
-    assessment_collection = {"assessments": {}, "findings": {}}
+    assessment_collection = {
+        "assessments": {
+            "last_change": {
+                "$gte": start_of_data_collection,
+                "$lt": end_of_data_collection,
+            }
+        },
+        "findings": {},
+    }
 
     if args["--cyhy-config"]:
         for collection in cyhy_collection:
