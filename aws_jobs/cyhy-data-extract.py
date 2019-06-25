@@ -48,6 +48,7 @@ MAX_ENTRIES = 10
 DEFAULT_ES_RETRIEVE_SIZE = 10000
 DAYS_OF_DMARC_REPORTS = 1
 PAGE_SIZE = 100000  # Number of documents per query
+SAVEFILE_PREFIX = "cyhy_extract_"
 
 
 def custom_json_handler(obj):
@@ -115,14 +116,20 @@ def cleanup_old_files(output_dir, file_retention_num_days):
 def cleanup_bucket_files():
     """Delete oldest file if there are more than ten files in bucket_name."""
     s3 = boto3.client("s3")
-    ret = s3.list_objectsv2(Bucket=BUCKET_NAME)
+
+    # Retrieve a list of applicable files.
+    ret = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=SAVEFILE_PREFIX)
     obj_list = ret["Contents"]
-    while obj_list > MAX_ENTRIES:
-        obj_list.sort(key=lambda x: x["Key"])
+
+    while True:
+        obj_list.sort(key=lambda x: x["Key"], reverse=True)
         del_list = obj_list[MAX_ENTRIES:]
 
         for obj in del_list:
             s3.delete_object(Bucket=BUCKET_NAME, Key=obj["Key"])
+
+        if ret["IsTruncated"] is not True:
+            break
 
         ret = s3.list_objectsv2(Bucket=BUCKET_NAME)
         obj_list = ret["Contents"]
@@ -228,46 +235,59 @@ def main():
         )
         end_of_data_collection = start_of_data_collection + relativedelta(days=1)
 
-    # Get a list of all non-retired orgs
-    all_orgs = (
-        cyhy_db["requests"].find({"retired": {"$ne": True}}, {"_id": 1}).distinct("_id")
-    )
-    orgs = list(set(all_orgs) - ORGS_EXCLUDED)
-
     # Create tar/bzip2 file for writing
-    tbz_filename = "cyhy_extract_{!s}.tbz".format(
-        end_of_data_collection.isoformat().replace(":", "").split(".")[0]
+    tbz_filename = "{}{!s}.tbz".format(
+        SAVEFILE_PREFIX,
+        end_of_data_collection.isoformat().replace(":", "").split(".")[0],
     )
     tbz_file = tarfile.open(tbz_filename, mode="w:bz2")
 
-    cyhy_collection = {
-        "host_scans": {
-            "owner": {"$in": orgs},
-            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
-        },
-        "port_scans": {
-            "owner": {"$in": orgs},
-            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
-        },
-        "vuln_scans": {
-            "owner": {"$in": orgs},
-            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
-        },
-        "hosts": {
-            "owner": {"$in": orgs},
-            "last_change": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
+    if args["--cyhy-config"]:
+        # Get a list of all non-retired orgs
+        all_orgs = (
+            cyhy_db["requests"]
+            .find({"retired": {"$ne": True}}, {"_id": 1})
+            .distinct("_id")
+        )
+        orgs = list(set(all_orgs) - ORGS_EXCLUDED)
+
+        cyhy_collection = {
+            "host_scans": {
+                "owner": {"$in": orgs},
+                "time": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
             },
-        },
-        "tickets": {
-            "owner": {"$in": orgs},
-            "last_change": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
+            "port_scans": {
+                "owner": {"$in": orgs},
+                "time": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
             },
-        },
-    }
+            "vuln_scans": {
+                "owner": {"$in": orgs},
+                "time": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
+            },
+            "hosts": {
+                "owner": {"$in": orgs},
+                "last_change": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
+            },
+            "tickets": {
+                "owner": {"$in": orgs},
+                "last_change": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
+            },
+        }
 
     scan_collection = {
         "https_scan": {
