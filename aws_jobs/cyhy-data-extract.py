@@ -117,11 +117,11 @@ def cleanup_bucket_files():
     """Delete oldest file if there are more than ten files in bucket_name."""
     s3 = boto3.client("s3")
 
-    # Retrieve a list of applicable files.
-    ret = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=SAVEFILE_PREFIX)
-    obj_list = ret["Contents"]
-
     while True:
+        # Retrieve a list of applicable files.
+        ret = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=SAVEFILE_PREFIX)
+        obj_list = ret["Contents"]
+
         obj_list.sort(key=lambda x: x["Key"], reverse=True)
         del_list = obj_list[MAX_ENTRIES:]
 
@@ -130,9 +130,6 @@ def cleanup_bucket_files():
 
         if ret["IsTruncated"] is not True:
             break
-
-        ret = s3.list_objectsv2(Bucket=BUCKET_NAME)
-        obj_list = ret["Contents"]
 
 
 def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection):
