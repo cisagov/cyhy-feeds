@@ -117,11 +117,15 @@ def cleanup_bucket_files(aws_access_key_id, aws_secret_access_key):
     s3 = boto3.client("s3")
     ret = s3.list_objectsv2(Bucket=BUCKET_NAME)
     obj_list = ret["Contents"]
-    obj_list.sort(key=lambda x: x["Key"])
-    del_list = obj_list[MAX_ENTRIES:]
+    while obj_list > MAX_ENTRIES:
+        obj_list.sort(key=lambda x: x["Key"])
+        del_list = obj_list[MAX_ENTRIES:]
 
-    for obj in del_list:
-        s3.delete_object(Bucket=BUCKET_NAME, Key=obj["Key"])
+        for obj in del_list:
+            s3.delete_object(Bucket=BUCKET_NAME, Key=obj["Key"])
+
+        ret = s3.list_objectsv2(Bucket=BUCKET_NAME)
+        obj_list = ret["Contents"]
 
 
 def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection):
