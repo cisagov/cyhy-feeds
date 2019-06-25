@@ -2,7 +2,7 @@
 """Create compressed, encrypted, signed extract file with Federal CyHy data for integration with the Weathermap project.
 
 Usage:
-  COMMAND_NAME [--cyhy-config CYHY_CONFIG] [--scan-config SCAN_CONFIG] [--assessment-config ASSESSMENT_CONFIG] [-v | --verbose] [-a | --aws ] [--cleanup] --config CONFIG_FILE [--date DATE]
+  COMMAND_NAME [--cyhy-config CYHY_CONFIG] [--scan-config SCAN_CONFIG] [--assessment-config ASSESSMENT_CONFIG] [-v | --verbose] [-a | --aws ] [--cleanup-aws] --config CONFIG_FILE [--date DATE]
   COMMAND_NAME (-h | --help)
   COMMAND_NAME --version
 
@@ -14,7 +14,7 @@ Options:
   -z ASSESSMENT_CONFIG --assessment-config=ASSESSMENT_CONFIG        Assessment MongoDB configuration to use
   -v --verbose                                                      Show verbose output
   -a --aws                                                          Output results to S3 bucket
-  --cleanup                                                         Delete old files from the S3 bucket
+  --cleanup-aws                                                     Delete old files from the S3 bucket
   -c CONFIG_FILE --config=CONFIG_FILE                               Configuration file for this script
   -d DATE --date=DATE                                               Specific date to export data from in form: %Y-%m-%d (eg. 2018-12-31) NOTE that this date is in UTC
 
@@ -112,7 +112,7 @@ def cleanup_old_files(output_dir, file_retention_num_days):
 
 
 # TODO Finish function to delete files until there is only X in the bucket
-def cleanup_bucket_files(aws_access_key_id, aws_secret_access_key):
+def cleanup_bucket_files():
     """Delete oldest file if there are more than ten files in bucket_name."""
     s3 = boto3.client("s3")
     ret = s3.list_objectsv2(Bucket=BUCKET_NAME)
@@ -385,6 +385,9 @@ def main():
         print("Deleted ", tbz_filename, " as part of cleanup.")
 
     cleanup_old_files(OUTPUT_DIR, FILE_RETENTION_NUM_DAYS)
+
+    if args["--cleanup-aws"]:
+        cleanup_bucket_files()
 
     print("\nSUCCESS!")
 
