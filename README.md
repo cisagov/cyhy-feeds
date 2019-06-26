@@ -55,6 +55,8 @@ Options:
   -v --verbose                                                    Show verbose output
   -a --aws                                                        Output results
                                                                   to S3 bucket
+  --cleanup-aws                                                   Delete old files
+                                                                  from the S3 bucket
   -c CONFIG_FILE --config=CONFIG_FILE                             Configuration file
                                                                   for this script
   -d DATE --date=DATE                                             Specific date to

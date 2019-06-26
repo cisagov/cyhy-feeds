@@ -2,7 +2,7 @@
 """Create compressed, encrypted, signed extract file with Federal CyHy data for integration with the Weathermap project.
 
 Usage:
-  COMMAND_NAME [--cyhy-config CYHY_CONFIG] [--scan-config SCAN_CONFIG] [--assessment-config ASSESSMENT_CONFIG] [-v | --verbose] [-a | --aws] --config CONFIG_FILE [--date DATE]
+  COMMAND_NAME [--cyhy-config CYHY_CONFIG] [--scan-config SCAN_CONFIG] [--assessment-config ASSESSMENT_CONFIG] [-v | --verbose] [-a | --aws ] [--cleanup-aws] --config CONFIG_FILE [--date DATE]
   COMMAND_NAME (-h | --help)
   COMMAND_NAME --version
 
@@ -13,7 +13,8 @@ Options:
   -y SCAN_CONFIG --scan-config=SCAN_CONFIG                          Scan MongoDB configuration to use
   -z ASSESSMENT_CONFIG --assessment-config=ASSESSMENT_CONFIG        Assessment MongoDB configuration to use
   -v --verbose                                                      Show verbose output
-  -a --aws                                                          Output results to s3 bucket
+  -a --aws                                                          Output results to S3 bucket
+  --cleanup-aws                                                     Delete old files from the S3 bucket
   -c CONFIG_FILE --config=CONFIG_FILE                               Configuration file for this script
   -d DATE --date=DATE                                               Specific date to export data from in form: %Y-%m-%d (eg. 2018-12-31) NOTE that this date is in UTC
 
@@ -43,10 +44,10 @@ from dmarc import get_dmarc_data
 BUCKET_NAME = "ncats-moe-data"
 DOMAIN = "ncats-moe-data"
 HEADER = ""
-MAX_ENTRIES = 10
 DEFAULT_ES_RETRIEVE_SIZE = 10000
 DAYS_OF_DMARC_REPORTS = 1
 PAGE_SIZE = 100000  # Number of documents per query
+SAVEFILE_PREFIX = "cyhy_extract_"
 
 
 def custom_json_handler(obj):
@@ -72,6 +73,11 @@ def custom_json_handler(obj):
 def to_json(obj):
     """Return a string representation of a formatted JSON."""
     return json.dumps(obj, sort_keys=True, indent=4, default=custom_json_handler)
+
+
+def flatten_datetime(in_datetime):
+    """Flatten datetime to day, month, and year only."""
+    return in_datetime.replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 def update_bucket(bucket_name, local_file, remote_file_name):
@@ -110,19 +116,36 @@ def cleanup_old_files(output_dir, file_retention_num_days):
                 os.remove(full_path_filename)
 
 
-# TODO Finish function to delete files until there is only X in the bucket
-def cleanup_bucket_files(aws_access_key_id, aws_secret_access_key):
-    """Delete oldest file if there are more than ten files in bucket_name."""
-    s3 = boto3.client(
-        "s3",
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
+def cleanup_bucket_files(object_retention_days):
+    """Delete oldest files if they are older than the provided retention time."""
+    retention_time = flatten_datetime(
+        datetime.now(tz.tzlocal()) - relativedelta(days=object_retention_days)
     )
+    s3 = boto3.client("s3")
 
-    if len(s3.list_objects(Bucket=BUCKET_NAME)["Contents"]) > MAX_ENTRIES:
-        for key in s3.list_objects(Bucket=BUCKET_NAME)["Contents"]:
-            print(key)
-            print(key["LastModified"])
+    while True:
+        # Retrieve a list of applicable files.
+        response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=SAVEFILE_PREFIX)
+        obj_list = response["Contents"]
+
+        del_resp = s3.delete_objects(
+            Bucket=BUCKET_NAME,
+            Delete={
+                "Objects": [
+                    {"Key": o["Key"]}
+                    for o in obj_list
+                    if flatten_datetime(o["LastModified"]) < retention_time
+                ]
+            },
+        )
+        for err in del_resp["Errors"]:
+            sys.stderr.write(
+                "Error: {} when deleting {} - {}\n".format(
+                    err["Message"], err["Key"], err["Code"]
+                )
+            )
+        if response["IsTruncated"] is not True:
+            break
 
 
 def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection):
@@ -225,46 +248,59 @@ def main():
         )
         end_of_data_collection = start_of_data_collection + relativedelta(days=1)
 
-    # Get a list of all non-retired orgs
-    all_orgs = (
-        cyhy_db["requests"].find({"retired": {"$ne": True}}, {"_id": 1}).distinct("_id")
-    )
-    orgs = list(set(all_orgs) - ORGS_EXCLUDED)
-
     # Create tar/bzip2 file for writing
-    tbz_filename = "cyhy_extract_{!s}.tbz".format(
-        end_of_data_collection.isoformat().replace(":", "").split(".")[0]
+    tbz_filename = "{}{!s}.tbz".format(
+        SAVEFILE_PREFIX,
+        end_of_data_collection.isoformat().replace(":", "").split(".")[0],
     )
     tbz_file = tarfile.open(tbz_filename, mode="w:bz2")
 
-    cyhy_collection = {
-        "host_scans": {
-            "owner": {"$in": orgs},
-            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
-        },
-        "port_scans": {
-            "owner": {"$in": orgs},
-            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
-        },
-        "vuln_scans": {
-            "owner": {"$in": orgs},
-            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
-        },
-        "hosts": {
-            "owner": {"$in": orgs},
-            "last_change": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
+    if args["--cyhy-config"]:
+        # Get a list of all non-retired orgs
+        all_orgs = (
+            cyhy_db["requests"]
+            .find({"retired": {"$ne": True}}, {"_id": 1})
+            .distinct("_id")
+        )
+        orgs = list(set(all_orgs) - ORGS_EXCLUDED)
+
+        cyhy_collection = {
+            "host_scans": {
+                "owner": {"$in": orgs},
+                "time": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
             },
-        },
-        "tickets": {
-            "owner": {"$in": orgs},
-            "last_change": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
+            "port_scans": {
+                "owner": {"$in": orgs},
+                "time": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
             },
-        },
-    }
+            "vuln_scans": {
+                "owner": {"$in": orgs},
+                "time": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
+            },
+            "hosts": {
+                "owner": {"$in": orgs},
+                "last_change": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
+            },
+            "tickets": {
+                "owner": {"$in": orgs},
+                "last_change": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
+            },
+        }
 
     scan_collection = {
         "https_scan": {
@@ -382,6 +418,9 @@ def main():
         print("Deleted ", tbz_filename, " as part of cleanup.")
 
     cleanup_old_files(OUTPUT_DIR, FILE_RETENTION_NUM_DAYS)
+
+    if args["--cleanup-aws"]:
+        cleanup_bucket_files(FILE_RETENTION_NUM_DAYS)
 
     print("\nSUCCESS!")
 
