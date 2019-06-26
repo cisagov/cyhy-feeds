@@ -44,7 +44,6 @@ from dmarc import get_dmarc_data
 BUCKET_NAME = "ncats-moe-data"
 DOMAIN = "ncats-moe-data"
 HEADER = ""
-MAX_ENTRIES = 10
 DEFAULT_ES_RETRIEVE_SIZE = 10000
 DAYS_OF_DMARC_REPORTS = 1
 PAGE_SIZE = 100000  # Number of documents per query
@@ -74,6 +73,11 @@ def custom_json_handler(obj):
 def to_json(obj):
     """Return a string representation of a formatted JSON."""
     return json.dumps(obj, sort_keys=True, indent=4, default=custom_json_handler)
+
+
+def flatten_datetime(in_datetime):
+    """Flatten datetime to day, month, and year only."""
+    return in_datetime.replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 def update_bucket(bucket_name, local_file, remote_file_name):
@@ -112,23 +116,35 @@ def cleanup_old_files(output_dir, file_retention_num_days):
                 os.remove(full_path_filename)
 
 
-# TODO Finish function to delete files until there is only X in the bucket
-def cleanup_bucket_files():
-    """Delete oldest file if there are more than ten files in bucket_name."""
+def cleanup_bucket_files(object_retention_days):
+    """Delete oldest files if they are older than the provided retention time."""
+    retention_time = flatten_datetime(
+        datetime.now(tz.tzlocal()) - relativedelta(days=object_retention_days)
+    )
     s3 = boto3.client("s3")
 
     while True:
         # Retrieve a list of applicable files.
-        ret = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=SAVEFILE_PREFIX)
-        obj_list = ret["Contents"]
+        response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=SAVEFILE_PREFIX)
+        obj_list = response["Contents"]
 
-        obj_list.sort(key=lambda x: x["Key"], reverse=True)
-        del_list = obj_list[MAX_ENTRIES:]
-
-        for obj in del_list:
-            s3.delete_object(Bucket=BUCKET_NAME, Key=obj["Key"])
-
-        if ret["IsTruncated"] is not True:
+        del_resp = s3.delete_objects(
+            Bucket=BUCKET_NAME,
+            Delete={
+                "Objects": [
+                    {"Key": o["Key"]}
+                    for o in obj_list
+                    if flatten_datetime(o["LastModified"]) < retention_time
+                ]
+            },
+        )
+        for err in del_resp["Errors"]:
+            sys.stderr.write(
+                "Error: {} when deleting {} - {}\n".format(
+                    err["Message"], err["Key"], err["Code"]
+                )
+            )
+        if response["IsTruncated"] is not True:
             break
 
 
@@ -404,7 +420,7 @@ def main():
     cleanup_old_files(OUTPUT_DIR, FILE_RETENTION_NUM_DAYS)
 
     if args["--cleanup-aws"]:
-        cleanup_bucket_files()
+        cleanup_bucket_files(FILE_RETENTION_NUM_DAYS)
 
     print("\nSUCCESS!")
 
