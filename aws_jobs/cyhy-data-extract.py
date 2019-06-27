@@ -138,13 +138,12 @@ def cleanup_bucket_files(object_retention_days):
                 ]
             },
         )
-        if "Errors" in del_resp:
-            for err in del_resp["Errors"]:
-                sys.stderr.write(
-                    "Error: {} when deleting {} - {}\n".format(
-                        err["Message"], err["Key"], err["Code"]
-                    )
+        for err in del_resp.get("Errors", []):
+            sys.stderr.write(
+                "Error: {} when deleting {} - {}\n".format(
+                    err["Message"], err["Key"], err["Code"]
                 )
+            )
         if response["IsTruncated"] is not True:
             break
 
