@@ -22,7 +22,11 @@ Options:
 
 import re
 import sys
-from ConfigParser import SafeConfigParser
+
+try:
+    from configparser import SafeConfigParser
+except ImportError:
+    from ConfigParser import SafeConfigParser
 from datetime import datetime
 import json
 import os
@@ -150,8 +154,8 @@ def cleanup_bucket_files(object_retention_days):
 
 def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection):
     """Query collection for data matching query and add it to tbz_file."""
-    print("Fetching from", collection.name, "collection...")
-    json_filename = "{!s}_{!s}.json".format(
+    print("Fetching from {} }collection...".format(collection.name))
+    json_filename = "{}_{!s}.json".format(
         collection.name,
         end_of_data_collection.isoformat().replace(":", "").split(".")[0],
     )
@@ -177,13 +181,13 @@ def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection
 
         collection_file.write("\n]")
 
-    print("Finished writing ", collection.name, " to file.")
+    print("Finished writing {} to file.".format(collection.name))
     tbz_file.add(json_filename)
-    print(" Added {!s} to {!s}".format(json_filename, tbz_filename))
+    print(" Added {} to {}".format(json_filename, tbz_filename))
     # Delete file once added to tar
     if os.path.exists(json_filename):
         os.remove(json_filename)
-        print("Deleted ", json_filename, " as part of cleanup.")
+        print("Deleted {} as part of cleanup.".format(json_filename))
 
 
 def main():
@@ -220,9 +224,7 @@ def main():
     # Check if OUTPUT_DIR exists; if not, bail out
     if not os.path.exists(OUTPUT_DIR):
         print(
-            "ERROR: Output directory '{!s}' does not exist - exiting!".format(
-                OUTPUT_DIR
-            )
+            "ERROR: Output directory '{}' does not exist - exiting!".format(OUTPUT_DIR)
         )
         sys.exit(1)
 
@@ -369,7 +371,7 @@ def main():
             ES_AWS_CONFIG_SECTION_NAME,
         )
     )
-    json_filename = "{!s}_{!s}.json".format(
+    json_filename = "{}_{!s}.json".format(
         "DMARC", end_of_data_collection.isoformat().replace(":", "").split(".")[0]
     )
     dmarc_file = open(json_filename, "w")
@@ -379,7 +381,7 @@ def main():
     tbz_file.close()
     if os.path.exists(json_filename):
         os.remove(json_filename)
-        print("Deleted ", json_filename, " as part of cleanup.")
+        print("Deleted {} as part of cleanup.".format(json_filename))
 
     gpg_file_name = tbz_filename + ".gpg"
     gpg_full_path_filename = os.path.join(OUTPUT_DIR, gpg_file_name)
@@ -397,7 +399,7 @@ def main():
 
     if not status.ok:
         print(
-            "\nFAILURE - GPG ERROR!\n GPG status: {!s} \n GPG stderr:\n{!s}".format(
+            "\nFAILURE - GPG ERROR!\n GPG status: {} \n GPG stderr:\n{}".format(
                 status.status, status.stderr
             )
         )
@@ -408,14 +410,14 @@ def main():
         update_bucket(BUCKET_NAME, gpg_full_path_filename, gpg_file_name)
         print("Upload to AWS bucket complete")
     print(
-        "Encrypted, signed, compressed JSON data written to file: {!s}".format(
+        "Encrypted, signed, compressed JSON data written to file: {}".format(
             gpg_full_path_filename
         )
     )
 
     if os.path.exists(tbz_filename):
         os.remove(tbz_filename)
-        print("Deleted ", tbz_filename, " as part of cleanup.")
+        print("Deleted {} as part of cleanup.".format(tbz_filename))
 
     cleanup_old_files(OUTPUT_DIR, FILE_RETENTION_NUM_DAYS)
 
