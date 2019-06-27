@@ -138,7 +138,7 @@ def cleanup_bucket_files(object_retention_days):
                 ]
             },
         )
-        for err in del_resp["Errors"]:
+        for err in del_resp.get("Errors", []):
             sys.stderr.write(
                 "Error: {} when deleting {} - {}\n".format(
                     err["Message"], err["Key"], err["Code"]
