@@ -69,6 +69,7 @@ setup(
         "netaddr >= 0.7.10",
         "python-dateutil >= 2.2",
         "python-gnupg >= 0.4.3",
+        "pytz",
         "requests >= 2.18.4",
         "requests-aws4auth >= 0.9",
     ],
