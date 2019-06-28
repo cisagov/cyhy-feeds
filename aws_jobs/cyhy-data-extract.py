@@ -136,10 +136,9 @@ def cleanup_bucket_files(object_retention_days):
         else:
             break
 
-        obj_list = response["Contents"]
         del_list = [
             {"Key": o["Key"]}
-            for o in obj_list
+            for o in response["Contents"]
             if flatten_datetime(o["LastModified"]) < retention_time
         ]
         # AWS requires a list of objects and an empty list is seen as malformed.
