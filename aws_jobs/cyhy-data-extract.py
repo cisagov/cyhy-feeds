@@ -122,30 +122,36 @@ def cleanup_bucket_files(object_retention_days):
         datetime.now(tz.tzlocal()) - relativedelta(days=object_retention_days)
     )
     s3 = boto3.client("s3")
+    response = None
 
     while True:
-        # Retrieve a list of applicable files.
-        response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=SAVEFILE_PREFIX)
-        obj_list = response["Contents"]
-
-        del_resp = s3.delete_objects(
-            Bucket=BUCKET_NAME,
-            Delete={
-                "Objects": [
-                    {"Key": o["Key"]}
-                    for o in obj_list
-                    if flatten_datetime(o["LastModified"]) < retention_time
-                ]
-            },
-        )
-        for err in del_resp.get("Errors", []):
-            sys.stderr.write(
-                "Error: {} when deleting {} - {}\n".format(
-                    err["Message"], err["Key"], err["Code"]
-                )
+        if response is None:
+            response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=SAVEFILE_PREFIX)
+        elif response["IsTruncated"] is True:
+            response = s3.list_objects_v2(
+                Bucket=BUCKET_NAME,
+                Prefix=SAVEFILE_PREFIX,
+                ContinuationToken=response["NextContinuationToken"],
             )
-        if response["IsTruncated"] is not True:
+        else:
             break
+
+        del_list = [
+            {"Key": o["Key"]}
+            for o in response["Contents"]
+            if flatten_datetime(o["LastModified"]) < retention_time
+        ]
+        # AWS requires a list of objects and an empty list is seen as malformed.
+        if len(del_list) > 0:
+            del_resp = s3.delete_objects(
+                Bucket=BUCKET_NAME, Delete={"Objects": del_list}
+            )
+            for err in del_resp.get("Errors", []):
+                sys.stderr.write(
+                    "Error: {} when deleting {} - {}\n".format(
+                        err["Message"], err["Key"], err["Code"]
+                    )
+                )
 
 
 def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection):
