@@ -65,7 +65,7 @@ setup(
         "boto3 >= 1.8.7",
         "botocore >= 1.11.7",
         "docopt >= 0.6.2",
-        "mongo-db-from-config @ http://github.com/cisagov/mongo-db-from-config/tarball/develop#egg=mongo-db-from-config",
+        "mongo-db-from-config @ https://github.com/cisagov/mongo-db-from-config/tarball/develop#egg=mongo-db-from-config",
         "netaddr >= 0.7.10",
         "python-dateutil >= 2.2",
         "python-gnupg >= 0.4.3",
