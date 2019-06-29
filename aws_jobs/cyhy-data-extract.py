@@ -45,8 +45,8 @@ from pytz import timezone
 
 from dmarc import get_dmarc_data
 
-BUCKET_NAME = "ncats-moe-data"
-DOMAIN = "ncats-moe-data"
+BUCKET_NAME = "ncats-moe-data-mcdonnnj"
+DOMAIN = "ncats-moe-data-mcdonnnj"
 HEADER = ""
 DEFAULT_ES_RETRIEVE_SIZE = 10000
 DAYS_OF_DMARC_REPORTS = 1
@@ -142,7 +142,7 @@ def cleanup_bucket_files(object_retention_days):
 
         del_list = [
             {"Key": o["Key"]}
-            for o in response["Contents"]
+            for o in response.get("Contents", [])
             if flatten_datetime(o["LastModified"]) < retention_time
         ]
         # AWS requires a list of objects and an empty list is seen as malformed.
