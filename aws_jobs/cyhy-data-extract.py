@@ -160,7 +160,7 @@ def cleanup_bucket_files(object_retention_days):
 
 def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection):
     """Query collection for data matching query and add it to tbz_file."""
-    print("Fetching from {} }collection...".format(collection.name))
+    print("Fetching from {} collection...".format(collection.name))
     json_filename = "{}_{!s}.json".format(
         collection.name,
         end_of_data_collection.isoformat().replace(":", "").split(".")[0],
@@ -224,7 +224,7 @@ def main():
     FILE_RETENTION_NUM_DAYS = int(config.get("DEFAULT", "FILE_RETENTION_NUM_DAYS"))
     ES_REGION = config.get("DMARC", "ES_REGION")
     ES_URL = config.get("DMARC", "ES_URL")
-    ES_RETRIEVE_SIZE = config.get("DMARC", "ES_RETRIEVE_SIZE")
+    ES_RETRIEVE_SIZE = int(config.get("DMARC", "ES_RETRIEVE_SIZE"))
     ES_AWS_CONFIG_SECTION_NAME = config.get("DMARC", "ES_AWS_CONFIG_SECTION_NAME")
 
     # Check if OUTPUT_DIR exists; if not, bail out
