@@ -5,10 +5,9 @@ import logging
 import re
 
 # third-party libraries
+from requests_aws4auth import AWS4Auth
 import boto3
 import requests
-from requests_aws4auth import AWS4Auth
-
 
 DEFAULT_ES_RETRIEVE_SIZE = 10000
 

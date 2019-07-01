@@ -20,18 +20,23 @@ Options:
 
 """
 
-import sys
-import re
-from configparser import SafeConfigParser
 from datetime import datetime
+import re
+
+# Attempt to import the Python 3 version, fallback to Python 2 if it fails.
+try:
+    from configparser import SafeConfigParser
+except ImportError:
+    from ConfigParser import SafeConfigParser
+import sys
 import tarfile
 
 import boto3  # pip install boto3
 import botocore  # pip install botocore
-from dateutil.relativedelta import relativedelta
 import dateutil.tz as tz
 from docopt import docopt
 import gnupg
+from dateutil.relativedelta import relativedelta
 
 BUCKET_NAME = "ncats-moe-data"
 DOMAIN = "ncats-moe-data"
@@ -101,14 +106,14 @@ def main():
 
     if not decrypted_data.ok:
         print(
-            "\nFAILURE - GPG DECRYPTION ERROR!\n GPG status: {!s} \n GPG stderr:\n{!s}".format(
+            "\nFAILURE - GPG DECRYPTION ERROR!\n GPG status: {} \n GPG stderr:\n{}".format(
                 decrypted_data.status, decrypted_data.stderr
             )
         )
         sys.exit(-1)
 
     print(
-        "Encrypted file {!s} successfully decrypted to file: {!s}".format(
+        "Encrypted file {} successfully decrypted to file: {}".format(
             extract_filename, decrypted_filename
         )
     )
@@ -119,14 +124,12 @@ def main():
     if tar_membernames:
         print("Extracting files:")
         for f in tar_membernames:
-            print(" {!s}".format(f))
+            print(" {}".format(f))
         tar.extractall()
-        print(
-            "Decrypted file {!s} successfully uncompressed".format(decrypted_filename)
-        )
+        print("Decrypted file {} successfully uncompressed".format(decrypted_filename))
     else:
         print(
-            "\nFAILURE - ERROR UNCOMPRESSING!\n Expected .tbz file; Invalid tar data found in {!s}".format(
+            "\nFAILURE - ERROR UNCOMPRESSING!\n Expected .tbz file; Invalid tar data found in {}".format(
                 decrypted_filename
             )
         )
