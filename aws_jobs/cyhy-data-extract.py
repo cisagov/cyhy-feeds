@@ -23,6 +23,7 @@ Options:
 import re
 import sys
 
+# Attempt to import the Python 3 version, fallback to Python 2 if it fails.
 try:
     from configparser import SafeConfigParser
 except ImportError:
@@ -45,8 +46,8 @@ from pytz import timezone
 
 from dmarc import get_dmarc_data
 
-BUCKET_NAME = "ncats-moe-data-mcdonnnj"
-DOMAIN = "ncats-moe-data-mcdonnnj"
+BUCKET_NAME = "ncats-moe-data"
+DOMAIN = "ncats-moe-data"
 HEADER = ""
 DEFAULT_ES_RETRIEVE_SIZE = 10000
 DAYS_OF_DMARC_REPORTS = 1
