@@ -378,8 +378,8 @@ def main():
             ES_AWS_CONFIG_SECTION_NAME,
         )
     )
-    json_filename = "{}_{!s}.json".format(
-        "DMARC", end_of_data_collection.isoformat().replace(":", "").split(".")[0]
+    json_filename = "DMARC_{!s}.json".format(
+        end_of_data_collection.isoformat().replace(":", "").split(".")[0]
     )
     dmarc_file = open(json_filename, "w")
     dmarc_file.write(json_data)
