@@ -20,28 +20,28 @@ Options:
 
 """
 
+from datetime import datetime
+import json
+import os
 import re
-import sys
 
 # Attempt to import the Python 3 version, fallback to Python 2 if it fails.
 try:
     from configparser import SafeConfigParser
 except ImportError:
     from ConfigParser import SafeConfigParser
-from datetime import datetime
-import json
-import os
+import sys
 import tarfile
 import time
 
 import boto3
 import bson
-from dateutil.relativedelta import relativedelta
 import dateutil.tz as tz
+from mongo_db_from_config import db_from_config
 from docopt import docopt
 import gnupg  # pip install python-gnupg
-from mongo_db_from_config import db_from_config
 import netaddr
+from dateutil.relativedelta import relativedelta
 from pytz import timezone
 
 from dmarc import get_dmarc_data

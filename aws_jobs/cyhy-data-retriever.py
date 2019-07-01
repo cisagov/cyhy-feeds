@@ -20,18 +20,23 @@ Options:
 
 """
 
-import sys
-import re
-from configparser import SafeConfigParser
 from datetime import datetime
+import re
+
+# Attempt to import the Python 3 version, fallback to Python 2 if it fails.
+try:
+    from configparser import SafeConfigParser
+except ImportError:
+    from ConfigParser import SafeConfigParser
+import sys
 import tarfile
 
 import boto3  # pip install boto3
 import botocore  # pip install botocore
-from dateutil.relativedelta import relativedelta
 import dateutil.tz as tz
 from docopt import docopt
 import gnupg
+from dateutil.relativedelta import relativedelta
 
 BUCKET_NAME = "ncats-moe-data"
 DOMAIN = "ncats-moe-data"
