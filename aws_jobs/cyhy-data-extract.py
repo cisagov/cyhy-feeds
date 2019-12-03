@@ -272,44 +272,37 @@ def main():
             .distinct("_id")
         )
         orgs = list(set(all_orgs) - ORGS_EXCLUDED)
+    else:
+        orgs = None
 
-        cyhy_collection = {
-            "host_scans": {
-                "owner": {"$in": orgs},
-                "time": {
-                    "$gte": start_of_data_collection,
-                    "$lt": end_of_data_collection,
-                },
+    cyhy_collection = {
+        "host_scans": {
+            "owner": {"$in": orgs},
+            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
+        },
+        "port_scans": {
+            "owner": {"$in": orgs},
+            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
+        },
+        "vuln_scans": {
+            "owner": {"$in": orgs},
+            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
+        },
+        "hosts": {
+            "owner": {"$in": orgs},
+            "last_change": {
+                "$gte": start_of_data_collection,
+                "$lt": end_of_data_collection,
             },
-            "port_scans": {
-                "owner": {"$in": orgs},
-                "time": {
-                    "$gte": start_of_data_collection,
-                    "$lt": end_of_data_collection,
-                },
+        },
+        "tickets": {
+            "owner": {"$in": orgs},
+            "last_change": {
+                "$gte": start_of_data_collection,
+                "$lt": end_of_data_collection,
             },
-            "vuln_scans": {
-                "owner": {"$in": orgs},
-                "time": {
-                    "$gte": start_of_data_collection,
-                    "$lt": end_of_data_collection,
-                },
-            },
-            "hosts": {
-                "owner": {"$in": orgs},
-                "last_change": {
-                    "$gte": start_of_data_collection,
-                    "$lt": end_of_data_collection,
-                },
-            },
-            "tickets": {
-                "owner": {"$in": orgs},
-                "last_change": {
-                    "$gte": start_of_data_collection,
-                    "$lt": end_of_data_collection,
-                },
-            },
-        }
+        },
+    }
 
     scan_collection = {
         "https_scan": {
