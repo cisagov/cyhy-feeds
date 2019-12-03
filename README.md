@@ -1,9 +1,10 @@
 # Cyber Hygiene Feeds 📥 📤 #
 
-[![Build Status](https://travis-ci.com/cisagov/cyhy-feeds.svg?branch=develop)](https://travis-ci.com/cisagov/cyhy-feeds)
+[![GitHub Build Status](https://github.com/cisagov/cyhy-feeds/workflows/build/badge.svg)](https://github.com/cisagov/cyhy-feeds/actions)
 [![Coverage Status](https://coveralls.io/repos/github/cisagov/cyhy-feeds/badge.svg?branch=develop)](https://coveralls.io/github/cisagov/cyhy-feeds?branch=develop)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/cyhy-feeds.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/cyhy-feeds/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/cyhy-feeds.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/cyhy-feeds/context:python)
+[![Known Vulnerabilities](https://snyk.io/test/github/cisagov/cyhy-feeds/develop/badge.svg)](https://snyk.io/test/github/cisagov/cyhy-feeds)
 
 cyhy-feeds consists of two parts: the extractor and the retriever.
 

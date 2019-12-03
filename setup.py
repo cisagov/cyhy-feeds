@@ -15,7 +15,7 @@ from os.path import splitext, basename
 
 def readme():
     """Read in and return the contents of the project's README.md file."""
-    with open("README.md") as f:
+    with open("README.md", encoding="utf-8") as f:
         return f.read()
 
 
