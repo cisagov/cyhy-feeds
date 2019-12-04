@@ -110,6 +110,7 @@ def setup_logging(debug_logging):
     )
     file_handler.setFormatter(formatter)
     root.addHandler(file_handler)
+    logger.debug("Debug mode enabled.")
     return root
 
 
@@ -180,9 +181,9 @@ def cleanup_bucket_files(object_retention_days):
                 Bucket=BUCKET_NAME, Delete={"Objects": del_list}
             )
             for err in del_resp.get("Errors", []):
-                sys.stderr.write(
-                    "Error: {} when deleting {} - {}\n".format(
-                        err["Message"], err["Key"], err["Code"]
+                logger.error(
+                    "Failed to delete '{}' :: {} - {}\n".format(
+                        err["key"], err["Code"], err["Message"]
                     )
                 )
 
@@ -198,7 +199,7 @@ def generate_cursor(collection, query):
 
 def query_data(collection, cursor, tbz_file, tbz_filename, end_of_data_collection):
     """Query collection for data matching query and add it to tbz_file."""
-    print("Fetching from {} collection...".format(collection))
+    logger.info("Fetching from {} collection...".format(collection))
     json_filename = "{}_{!s}.json".format(
         collection, end_of_data_collection.isoformat().replace(":", "").split(".")[0],
     )
@@ -222,13 +223,13 @@ def query_data(collection, cursor, tbz_file, tbz_filename, end_of_data_collectio
 
         collection_file.write("\n]")
 
-    print("Finished writing {} to file.".format(collection))
+    logger.info("Finished writing {} to file.".format(collection))
     tbz_file.add(json_filename)
-    print(" Added {} to {}".format(json_filename, tbz_filename))
+    logger.info("Added {} to {}".format(json_filename, tbz_filename))
     # Delete file once added to tar
     if os.path.exists(json_filename):
         os.remove(json_filename)
-        print("Deleted {} as part of cleanup.".format(json_filename))
+        logger.info("Deleted {} as part of cleanup.".format(json_filename))
 
 
 def main():
@@ -239,11 +240,16 @@ def main():
 
     setup_logging(args["--debug"])
 
+    logger.info("Beginning data extraction process.")
+
     if args["--cyhy-config"]:
+        logger.debug("Creating connection to cyhy database.")
         cyhy_db = db_from_config(args["--cyhy-config"])
     if args["--scan-config"]:
+        logger.debug("Creating connection to scan database.")
         scan_db = db_from_config(args["--scan-config"])
     if args["--assessment-config"]:
+        logger.debug("Creating connection to assessment database.")
         assessment_db = db_from_config(args["--assessment-config"])
     now = datetime.now(tz.tzutc())
 
@@ -267,9 +273,7 @@ def main():
 
     # Check if OUTPUT_DIR exists; if not, bail out
     if not os.path.exists(OUTPUT_DIR):
-        print(
-            "ERROR: Output directory '{}' does not exist - exiting!".format(OUTPUT_DIR)
-        )
+        logger.error("Output directory '{}' does not exist.".format(OUTPUT_DIR))
         sys.exit(1)
 
     # Set up GPG (used for encrypting and signing)
@@ -291,6 +295,12 @@ def main():
     else:
         end_of_data_collection = flatten_datetime(now)
         start_of_data_collection = end_of_data_collection + relativedelta(days=-1)
+
+    logger.debug(
+        "Extracting data from {} to {}.".format(
+            start_of_data_collection, end_of_data_collection
+        )
+    )
 
     # Create tar/bzip2 file for writing
     tbz_filename = "{}{!s}.tbz".format(
@@ -372,9 +382,11 @@ def main():
     # name and the generated cursor to later iterate over for data retrieval. We
     # create cursors all at once to "lock in" the query results to reduce timing
     # issues for data retrieval.
+    logger.info("Creating cursors for query results.")
     cursor_list = []
     if args["--cyhy-config"]:
         for collection in cyhy_collection:
+            logger.debug("Generating cursor for {}.{}".format(cyhy_db.name, collection))
             cursor_list.append(
                 (
                     cyhy_db[collection].name,
@@ -383,6 +395,7 @@ def main():
             )
     if args["--scan-config"]:
         for collection in scan_collection:
+            logger.debug("Generating cursor for {}.{}".format(scan_db.name, collection))
             cursor_list.append(
                 (
                     scan_db[collection].name,
@@ -391,6 +404,9 @@ def main():
             )
     if args["--assessment-config"]:
         for collection in assessment_collection:
+            logger.debug(
+                "Generating cursor for {}.{}".format(assessment_db.name, collection)
+            )
             cursor_list.append(
                 (
                     assessment_db[collection].name,
@@ -401,6 +417,7 @@ def main():
             )
 
     # Use our generated cursors to pull data now.
+    logger.info("Extracting data from database(s).")
     for collection, cursor in cursor_list:
         query_data(
             collection, cursor, tbz_file, tbz_filename, end_of_data_collection,
@@ -428,7 +445,7 @@ def main():
     tbz_file.close()
     if os.path.exists(json_filename):
         os.remove(json_filename)
-        print("Deleted {} as part of cleanup.".format(json_filename))
+        logger.info("Deleted {} as part of cleanup.".format(json_filename))
 
     gpg_file_name = tbz_filename + ".gpg"
     gpg_full_path_filename = os.path.join(OUTPUT_DIR, gpg_file_name)
@@ -445,33 +462,30 @@ def main():
         )
 
     if not status.ok:
-        print(
-            "\nFAILURE - GPG ERROR!\n GPG status: {} \n GPG stderr:\n{}".format(
-                status.status, status.stderr
-            )
-        )
+        logger.error("GPG Error {} :: {}".format(status.status, status.stderr))
         sys.exit(-1)
 
-    if args["--aws"]:
-        # send the contents to the s3 bucket
-        update_bucket(BUCKET_NAME, gpg_full_path_filename, gpg_file_name)
-        print("Upload to AWS bucket complete")
-    print(
-        "Encrypted, signed, compressed JSON data written to file: {}".format(
+    logger.info(
+        "Encrypted, signed, and compressed JSON data written to file: {}".format(
             gpg_full_path_filename
         )
     )
 
+    if args["--aws"]:
+        # send the contents to the s3 bucket
+        update_bucket(BUCKET_NAME, gpg_full_path_filename, gpg_file_name)
+        logger.info("Upload to AWS bucket complete")
+
     if os.path.exists(tbz_filename):
         os.remove(tbz_filename)
-        print("Deleted {} as part of cleanup.".format(tbz_filename))
+        logger.info("Deleted {} as part of cleanup.".format(tbz_filename))
 
     cleanup_old_files(OUTPUT_DIR, FILE_RETENTION_NUM_DAYS)
 
     if args["--cleanup-aws"]:
         cleanup_bucket_files(FILE_RETENTION_NUM_DAYS)
 
-    print("\nSUCCESS!")
+    logger.info("Finished data extraction process.")
 
 
 if __name__ == "__main__":
