@@ -159,12 +159,20 @@ def cleanup_bucket_files(object_retention_days):
                 )
 
 
-def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection):
+def generate_cursor(collection, query):
+    """Query collection and return a cursor to be used for data retrieval."""
+    # We set no_cursor_timeout so that long retrievals do not cause generated
+    # cursors to expire on the MongoDB server. This allows us to generate all cursors
+    # up front and then pull results without worrying about a generated cursor
+    # timing out on the server.
+    return collection.find(query, {"key": False}, no_cursor_timeout=True)
+
+
+def query_data(collection, cursor, tbz_file, tbz_filename, end_of_data_collection):
     """Query collection for data matching query and add it to tbz_file."""
-    print("Fetching from {} collection...".format(collection.name))
+    print("Fetching from {} collection...".format(collection))
     json_filename = "{}_{!s}.json".format(
-        collection.name,
-        end_of_data_collection.isoformat().replace(":", "").split(".")[0],
+        collection, end_of_data_collection.isoformat().replace(":", "").split(".")[0],
     )
 
     # The previous method converted all documents retrieved into a JSON string at
@@ -173,22 +181,20 @@ def query_data(collection, query, tbz_file, tbz_filename, end_of_data_collection
     # before pagination was implemented. We are now retrieving and processing
     # a single document at a time and the memory overhead is drastically lower.
     with open(json_filename, "w") as collection_file:
-        result = collection.find(query, {"key": False})
-
         collection_file.write("[")
 
-        for doc in result:
+        for doc in cursor:
             collection_file.write(to_json([doc])[1:-2])
             collection_file.write(",")
 
-        if result.retrieved != 0:
+        if cursor.retrieved != 0:
             # If we output documents then we have a trailing comma, so we need to
             # roll back the file location by one byte to overwrite as we finish
             collection_file.seek(-1, os.SEEK_END)
 
         collection_file.write("\n]")
 
-    print("Finished writing {} to file.".format(collection.name))
+    print("Finished writing {} to file.".format(collection))
     tbz_file.add(json_filename)
     print(" Added {} to {}".format(json_filename, tbz_filename))
     # Delete file once added to tar
@@ -333,33 +339,45 @@ def main():
 
     assessment_collection = {"assessments": {}, "findings": {}}
 
+    # Get cursors for the results of our queries. Create a tuple of the collection
+    # name and the generated cursor to later iterate over for data retrieval. We
+    # create cursors all at once to "lock in" the query results to reduce timing
+    # issues for data retrieval.
+    cursor_list = []
     if args["--cyhy-config"]:
         for collection in cyhy_collection:
-            query_data(
-                cyhy_db[collection],
-                cyhy_collection[collection],
-                tbz_file,
-                tbz_filename,
-                end_of_data_collection,
+            cursor_list.append(
+                (
+                    cyhy_db[collection].name,
+                    generate_cursor(cyhy_db[collection], cyhy_collection[collection]),
+                )
             )
     if args["--scan-config"]:
         for collection in scan_collection:
-            query_data(
-                scan_db[collection],
-                scan_collection[collection],
-                tbz_file,
-                tbz_filename,
-                end_of_data_collection,
+            cursor_list.append(
+                (
+                    scan_db[collection].name,
+                    generate_cursor(scan_db[collection], scan_collection[collection]),
+                )
             )
     if args["--assessment-config"]:
         for collection in assessment_collection:
-            query_data(
-                assessment_db[collection],
-                assessment_collection[collection],
-                tbz_file,
-                tbz_filename,
-                end_of_data_collection,
+            cursor_list.append(
+                (
+                    assessment_db[collection].name,
+                    generate_cursor(
+                        assessment_db[collection], assessment_collection[collection]
+                    ),
+                )
             )
+
+    # Use our generated cursors to pull data now.
+    for collection, cursor in cursor_list:
+        query_data(
+            collection, cursor, tbz_file, tbz_filename, end_of_data_collection,
+        )
+        # Just to be safe we manually close the cursor.
+        cursor.close()
 
     # Note that we use the elasticsearch AWS profile here
     json_data = to_json(
