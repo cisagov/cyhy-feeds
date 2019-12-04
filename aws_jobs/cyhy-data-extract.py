@@ -253,15 +253,13 @@ def main():
     if args["--date"]:
         # Note this date is in UTC timezone
         date_of_data = datetime.strptime(args["--date"], "%Y-%m-%d")
-        start_of_data_collection = timezone("UTC").localize(
-            date_of_data
-        ) + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
-        end_of_data_collection = start_of_data_collection + relativedelta(days=1)
-    else:
-        start_of_data_collection = now + relativedelta(
-            days=-1, hour=0, minute=0, second=0, microsecond=0
+        end_of_data_collection = flatten_datetime(
+            timezone("UTC").localize(date_of_data)
         )
-        end_of_data_collection = start_of_data_collection + relativedelta(days=1)
+        start_of_data_collection = end_of_data_collection + relativedelta(days=-1)
+    else:
+        end_of_data_collection = flatten_datetime(now)
+        start_of_data_collection = end_of_data_collection + relativedelta(days=-1)
 
     # Create tar/bzip2 file for writing
     tbz_filename = "{}{!s}.tbz".format(
