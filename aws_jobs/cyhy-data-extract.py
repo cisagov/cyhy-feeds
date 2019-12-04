@@ -2,7 +2,7 @@
 """Create compressed, encrypted, signed extract file with Federal CyHy data for integration with the Weathermap project.
 
 Usage:
-  COMMAND_NAME [--cyhy-config CYHY_CONFIG] [--scan-config SCAN_CONFIG] [--assessment-config ASSESSMENT_CONFIG] [-v | --verbose] [-a | --aws ] [--cleanup-aws] --config CONFIG_FILE [--date DATE]
+  COMMAND_NAME --config CONFIG_FILE [--cyhy-config CYHY_CONFIG] [--scan-config SCAN_CONFIG] [--assessment-config ASSESSMENT_CONFIG] [-v | --verbose] [-a | --aws ] [--cleanup-aws] [--date DATE] [--debug]
   COMMAND_NAME (-h | --help)
   COMMAND_NAME --version
 
@@ -17,19 +17,21 @@ Options:
   --cleanup-aws                                                     Delete old files from the S3 bucket
   -c CONFIG_FILE --config=CONFIG_FILE                               Configuration file for this script
   -d DATE --date=DATE                                               Specific date to export data from in form: %Y-%m-%d (eg. 2018-12-31) NOTE that this date is in UTC
+  --debug                                                           Enable debug logging
 
 """
-
-from datetime import datetime
-import json
-import os
-import re
 
 # Attempt to import the Python 3 version, fallback to Python 2 if it fails.
 try:
     from configparser import SafeConfigParser
 except ImportError:
     from ConfigParser import SafeConfigParser
+from datetime import datetime
+import json
+import logging
+from logging.handlers import RotatingFileHandler
+import os
+import re
 import sys
 import tarfile
 import time
@@ -45,6 +47,11 @@ from dateutil.relativedelta import relativedelta
 from pytz import timezone
 
 from dmarc import get_dmarc_data
+
+# Logging core variables
+logger = logging.getLogger("cyhy-feeds")
+LOG_FILE = "/var/log/cyhy/feeds.log"
+DEFAULT_LOGGER_LEVEL = logging.INFO
 
 BUCKET_NAME = "ncats-moe-data"
 DOMAIN = "ncats-moe-data"
@@ -83,6 +90,27 @@ def to_json(obj):
 def flatten_datetime(in_datetime):
     """Flatten datetime to day, month, and year only."""
     return in_datetime.replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+# All logging code is pulled from cyhy-core and tweaked down to this single use-case.
+# Since we are still running Python2 we cannot leverage some of the improvements
+# made in the logging library in later version.
+def setup_logging(debug_logging):
+    """Set up logging for the script."""
+    LOGGER_FORMAT = "%(asctime)-15s %(levelname)s %(name)s - %(message)s"
+    formatter = logging.Formatter(LOGGER_FORMAT)
+    formatter.converter = time.gmtime  # log times in UTC
+    root = logging.getLogger()
+    if debug_logging:
+        root.setLevel(logging.DEBUG)
+    else:
+        root.setLevel(DEFAULT_LOGGER_LEVEL)
+    file_handler = RotatingFileHandler(
+        LOG_FILE, maxBytes=pow(1024, 2) * 128, backupCount=9
+    )
+    file_handler.setFormatter(formatter)
+    root.addHandler(file_handler)
+    return root
 
 
 def update_bucket(bucket_name, local_file, remote_file_name):
@@ -208,6 +236,9 @@ def main():
     global __doc__
     __doc__ = re.sub("COMMAND_NAME", __file__, __doc__)
     args = docopt(__doc__, version="v0.0.1")
+
+    setup_logging(args["--debug"])
+
     if args["--cyhy-config"]:
         cyhy_db = db_from_config(args["--cyhy-config"])
     if args["--scan-config"]:
