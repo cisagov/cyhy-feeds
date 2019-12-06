@@ -323,7 +323,7 @@ def main():
         )
         orgs = list(set(all_orgs) - ORGS_EXCLUDED)
     else:
-        orgs = None
+        orgs = []
 
     cyhy_collection = {
         "host_scans": {
