@@ -245,7 +245,7 @@ def main():
     if not (
         args["--cyhy-config"] or args["--scan-config"] or args["--assessment-config"]
     ):
-        logger.error("At least one database configuration should be supplied.")
+        logger.error("At least one database configuration must be supplied.")
         sys.exit(1)
 
     if args["--cyhy-config"]:
