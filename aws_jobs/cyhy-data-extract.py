@@ -31,7 +31,6 @@ import json
 import logging
 from logging.handlers import RotatingFileHandler
 import os
-import re
 import sys
 import tarfile
 import time
@@ -139,7 +138,7 @@ def cleanup_old_files(output_dir, file_retention_num_days):
     now_unix = time.time()
     for filename in os.listdir(output_dir):
         # We only care about filenames that end with .gpg
-        if re.search(".gpg$", filename):
+        if filename.endswith(".gpg"):
             full_path_filename = os.path.join(output_dir, filename)
             # If file modification time is older than
             # file_retention_num_days.  Note that there are 86400
@@ -235,7 +234,7 @@ def query_data(collection, cursor, tbz_file, tbz_filename, end_of_data_collectio
 def main():
     """Retrieve data, aggreate into a compressed archive, and encrypt it to store or upload to S3."""
     global __doc__
-    __doc__ = re.sub("COMMAND_NAME", __file__, __doc__)
+    __doc__ = __doc__.replace("COMMAND_NAME", __file__)
     args = docopt(__doc__, version="v0.0.1")
 
     setup_logging(args["--debug"])
