@@ -242,6 +242,12 @@ def main():
 
     logger.info("Beginning data extraction process.")
 
+    if not (
+        args["--cyhy-config"] or args["--scan-config"] or args["--assessment-config"]
+    ):
+        logger.error("At least one database configuration should be supplied.")
+        sys.exit(1)
+
     if args["--cyhy-config"]:
         logger.debug("Creating connection to cyhy database.")
         cyhy_db = db_from_config(args["--cyhy-config"])
@@ -463,7 +469,7 @@ def main():
 
     if not status.ok:
         logger.error("GPG Error {} :: {}".format(status.status, status.stderr))
-        sys.exit(-1)
+        sys.exit(1)
 
     logger.info(
         "Encrypted, signed, and compressed JSON data written to file: {}".format(
