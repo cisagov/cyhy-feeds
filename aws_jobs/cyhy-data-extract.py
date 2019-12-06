@@ -199,6 +199,7 @@ def generate_cursor(collection, query):
 def query_data(collection, cursor, tbz_file, tbz_filename, end_of_data_collection):
     """Query collection for data matching query and add it to tbz_file."""
     logger.info("Fetching from {} collection...".format(collection))
+
     json_filename = "{}_{!s}.json".format(
         collection, end_of_data_collection.isoformat().replace(":", "").split(".")[0],
     )
@@ -296,10 +297,10 @@ def main():
         end_of_data_collection = flatten_datetime(
             timezone("UTC").localize(date_of_data)
         )
-        start_of_data_collection = end_of_data_collection + relativedelta(days=-1)
     else:
         end_of_data_collection = flatten_datetime(now)
-        start_of_data_collection = end_of_data_collection + relativedelta(days=-1)
+
+    start_of_data_collection = end_of_data_collection + relativedelta(days=-1)
 
     logger.debug(
         "Extracting data from {} to {}.".format(
