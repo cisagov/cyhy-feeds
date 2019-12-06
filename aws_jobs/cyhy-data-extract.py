@@ -49,7 +49,9 @@ from dmarc import get_dmarc_data
 
 # Logging core variables
 logger = logging.getLogger("cyhy-feeds")
-LOG_FILE = "/var/log/cyhy/feeds.log"
+LOG_FILE_NAME = "/var/log/cyhy/feeds.log"
+LOG_FILE_MAX_SIZE = pow(1024, 2) * 128
+LOG_FILE_BACKUP_COUNT = 9
 DEFAULT_LOGGER_LEVEL = logging.INFO
 
 BUCKET_NAME = "ncats-moe-data"
@@ -105,7 +107,7 @@ def setup_logging(debug_logging):
     else:
         root.setLevel(DEFAULT_LOGGER_LEVEL)
     file_handler = RotatingFileHandler(
-        LOG_FILE, maxBytes=pow(1024, 2) * 128, backupCount=9
+        LOG_FILE_NAME, maxBytes=LOG_FILE_MAX_SIZE, backupCount=LOG_FILE_BACKUP_COUNT
     )
     file_handler.setFormatter(formatter)
     root.addHandler(file_handler)
