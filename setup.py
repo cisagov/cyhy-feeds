@@ -11,12 +11,19 @@ Based on:
 from setuptools import setup, find_packages
 from glob import glob
 from os.path import splitext, basename
+import io
 
 
 def readme():
     """Read in and return the contents of the project's README.md file."""
-    with open("README.md", encoding="utf-8") as f:
-        return f.read()
+    # Python 3
+    try:
+        with open("README.md", encoding="utf-8") as f:
+            return f.read()
+    # Python 2 fallback
+    except TypeError:
+        with io.open("README.md") as f:
+            return f.read()
 
 
 def package_vars(version_file):
