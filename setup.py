@@ -74,6 +74,9 @@ setup(
         "docopt >= 0.6.2",
         "mongo-db-from-config @ https://github.com/cisagov/mongo-db-from-config/tarball/develop#egg=mongo-db-from-config",
         "netaddr >= 0.7.10",
+        # Due to an installer issue botocore at present requires dateutil < 2.8.1
+        # Please see https://github.com/boto/botocore/issues/1872 for more
+        # information.
         "python-dateutil >= 2.2, < 2.8.1",
         "python-gnupg >= 0.4.3",
         "pytz",
