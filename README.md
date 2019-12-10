@@ -38,36 +38,22 @@ Create compressed, encrypted, signed extract file with Federal CyHy data for
 integration with the Weathermap project.
 
 Usage:
-  COMMAND_NAME [--cyhy-config CYHY_CONFIG] [--scan-config SCAN_CONFIG]
-    [--assessment-config ASSESSMENT_CONFIG] [-v | --verbose] [-a | --aws]
-    --config CONFIG_FILE [--date DATE]
+  COMMAND_NAME --config CONFIG_FILE [--cyhy-config CYHY_CONFIG] [--scan-config SCAN_CONFIG] [--assessment-config ASSESSMENT_CONFIG] [-v | --verbose] [-a | --aws ] [--cleanup-aws] [--date DATE] [--debug]
   COMMAND_NAME (-h | --help)
   COMMAND_NAME --version
 
 Options:
-  -h --help                                                       Show this screen
-  --version                                                       Show version
-  -x CYHY_CONFIG --cyhy-config=CYHY_CONFIG                        CyHy configuration
-                                                                  file to use
-  -y SCAN_CONFIG --scan-config=SCAN_CONFIG                        Scan configuration
-                                                                  file to use
-  -z ASSESSMENT_CONFIG --assessment-config=ASSESSMENT_CONFIG      Assessment configuration
-                                                                  file to use
-  -v --verbose                                                    Show verbose output
-  -a --aws                                                        Output results
-                                                                  to S3 bucket
-  --cleanup-aws                                                   Delete old files
-                                                                  from the S3 bucket
-  -c CONFIG_FILE --config=CONFIG_FILE                             Configuration file
-                                                                  for this script
-  -d DATE --date=DATE                                             Specific date to
-                                                                  export data from
-                                                                  in form:
-                                                                  %YYYY-%MM-%DD
-                                                                  (eg. 2018-12-31)
-                                                                  NOTE that this
-                                                                  date is in UTC
-
+  -h --help                                                         Show this screen
+  --version                                                         Show version
+  -x CYHY_CONFIG --cyhy-config=CYHY_CONFIG                          CyHy MongoDB configuration to use
+  -y SCAN_CONFIG --scan-config=SCAN_CONFIG                          Scan MongoDB configuration to use
+  -z ASSESSMENT_CONFIG --assessment-config=ASSESSMENT_CONFIG        Assessment MongoDB configuration to use
+  -v --verbose                                                      Show verbose output
+  -a --aws                                                          Output results to S3 bucket
+  --cleanup-aws                                                     Delete old files from the S3 bucket
+  -c CONFIG_FILE --config=CONFIG_FILE                               Configuration file for this script
+  -d DATE --date=DATE                                               Specific date to export data from in form: %Y-%m-%d (eg. 2018-12-31) NOTE that this date is in UTC
+  --debug                                                           Enable debug logging
 ```
 
 #### cyhy-data-extract Examples ####
