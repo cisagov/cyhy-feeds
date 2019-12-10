@@ -22,7 +22,7 @@ def readme():
             return f.read()
     # Python 2 fallback
     except TypeError:
-        with io.open("README.md") as f:
+        with io.open("README.md", encoding="utf-8") as f:
             return f.read()
 
 
