@@ -8,15 +8,22 @@ Based on:
 - https://blog.ionelmc.ro/2014/05/25/python-packaging/#the-structure
 """
 
-from setuptools import setup, find_packages
 from glob import glob
+import io
 from os.path import splitext, basename
+from setuptools import setup, find_packages
 
 
 def readme():
     """Read in and return the contents of the project's README.md file."""
-    with open("README.md", encoding="utf-8") as f:
-        return f.read()
+    # Python 3
+    try:
+        with open("README.md", encoding="utf-8") as f:
+            return f.read()
+    # Python 2 fallback
+    except TypeError:
+        with io.open("README.md", encoding="utf-8") as f:
+            return f.read()
 
 
 def package_vars(version_file):
@@ -58,7 +65,7 @@ setup(
     keywords="cyhy",
     packages=find_packages(where="aws_jobs"),
     package_dir={"": "aws_jobs"},
-    package_data={"example": ["data/*.txt"]},
+    package_data={},
     py_modules=[splitext(basename(path))[0] for path in glob("aws_jobs/*.py")],
     include_package_data=True,
     install_requires=[
@@ -67,7 +74,10 @@ setup(
         "docopt >= 0.6.2",
         "mongo-db-from-config @ https://github.com/cisagov/mongo-db-from-config/tarball/develop#egg=mongo-db-from-config",
         "netaddr >= 0.7.10",
-        "python-dateutil >= 2.2",
+        # Due to an installer issue botocore at present requires dateutil < 2.8.1
+        # Please see https://github.com/boto/botocore/issues/1872 for more
+        # information.
+        "python-dateutil >= 2.2, < 2.8.1",
         "python-gnupg >= 0.4.3",
         "pytz",
         "requests >= 2.18.4",
