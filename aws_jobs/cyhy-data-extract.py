@@ -193,13 +193,15 @@ def cleanup_bucket_files(object_retention_days):
                 )
 
 
-def generate_cursor(collection, query):
+def generate_cursor(collection, parameters):
     """Query collection and return a cursor to be used for data retrieval."""
     # We set no_cursor_timeout so that long retrievals do not cause generated
     # cursors to expire on the MongoDB server. This allows us to generate all cursors
     # up front and then pull results without worrying about a generated cursor
     # timing out on the server.
-    return collection.find(query, {"key": False}, no_cursor_timeout=True)
+    return collection.find(
+        parameters["query"], parameters["projection"], no_cursor_timeout=True
+    )
 
 
 def query_data(collection, cursor, tbz_file, tbz_filename, end_of_data_collection):
@@ -332,63 +334,104 @@ def main():
     else:
         orgs = []
 
+    default_projection = {"key": False}
+
     cyhy_collection = {
         "host_scans": {
-            "owner": {"$in": orgs},
-            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
+            "query": {
+                "owner": {"$in": orgs},
+                "time": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
+            },
+            "projection": default_projection,
         },
         "hosts": {
-            "owner": {"$in": orgs},
-            "last_change": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
+            "query": {
+                "owner": {"$in": orgs},
+                "last_change": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
             },
+            "projection": default_projection,
         },
         "port_scans": {
-            "owner": {"$in": orgs},
-            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
+            "query": {
+                "owner": {"$in": orgs},
+                "time": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
+            },
+            "projection": default_projection,
         },
         "tickets": {
-            "owner": {"$in": orgs},
-            "last_change": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
+            "query": {
+                "owner": {"$in": orgs},
+                "last_change": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
             },
+            "projection": default_projection,
         },
         "vuln_scans": {
-            "owner": {"$in": orgs},
-            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
+            "query": {
+                "owner": {"$in": orgs},
+                "time": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
+            },
+            "projection": default_projection,
         },
     }
 
     scan_collection = {
         "certs": {
-            "sct_or_not_before": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
-            }
+            "query": {
+                "sct_or_not_before": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                }
+            },
+            "projection": default_projection,
         },
         "https_scan": {
-            "scan_date": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
-            }
+            "query": {
+                "scan_date": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                }
+            },
+            "projection": default_projection,
         },
         "sslyze_scan": {
-            "scan_date": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
-            }
+            "query": {
+                "scan_date": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                }
+            },
+            "projection": default_projection,
         },
         "trustymail": {
-            "scan_date": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
-            }
+            "query": {
+                "scan_date": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                }
+            },
+            "projection": default_projection,
         },
     }
 
-    assessment_collection = {"assessments": {}, "findings": {}}
+    assessment_collection = {
+        "assessments": {"query": {}, "projection": default_projection},
+        "findings": {"query": {}, "projection": default_projection},
+    }
 
     # Get cursors for the results of our queries. Create a tuple of the collection
     # name and the generated cursor to later iterate over for data retrieval. We
