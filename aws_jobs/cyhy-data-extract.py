@@ -21,11 +21,7 @@ Options:
 
 """
 
-# Attempt to import the Python 3 version, fallback to Python 2 if it fails.
-try:
-    from configparser import SafeConfigParser
-except ImportError:
-    from ConfigParser import SafeConfigParser
+# Standard Python Libraries
 from datetime import datetime
 import json
 import logging
@@ -35,17 +31,25 @@ import sys
 import tarfile
 import time
 
+# Third-Party Libraries
 import boto3
 import bson
+from dateutil.relativedelta import relativedelta
 import dateutil.tz as tz
-from mongo_db_from_config import db_from_config
 from docopt import docopt
 import gnupg  # pip install python-gnupg
 import netaddr
-from dateutil.relativedelta import relativedelta
 from pytz import timezone
 
+# cisagov Libraries
 from dmarc import get_dmarc_data
+from mongo_db_from_config import db_from_config
+
+# Import the appropriate version of SafeConfigParser.
+if sys.version_info.major == 2:
+    from ConfigParser import SafeConfigParser
+else:
+    from configparser import SafeConfigParser
 
 # Logging core variables
 logger = logging.getLogger("cyhy-feeds")
