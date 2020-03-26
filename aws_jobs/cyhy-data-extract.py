@@ -367,6 +367,20 @@ def main():
             },
             "projection": default_projection,
         },
+        "requests": {
+            "query": {},
+            "projection": {
+                "agency.acronym": True,
+                "agency.location": True,
+                "agency.name": True,
+                "agency.type": True,
+                "children": True,
+                "report_types": True,
+                "retired": True,
+                "scan_types": True,
+                "stakeholder": True,
+            },
+        },
         "tickets": {
             "query": {
                 "owner": {"$in": orgs},
