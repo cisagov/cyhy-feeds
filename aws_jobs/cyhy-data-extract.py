@@ -337,20 +337,16 @@ def main():
             "owner": {"$in": orgs},
             "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
         },
-        "port_scans": {
-            "owner": {"$in": orgs},
-            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
-        },
-        "vuln_scans": {
-            "owner": {"$in": orgs},
-            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
-        },
         "hosts": {
             "owner": {"$in": orgs},
             "last_change": {
                 "$gte": start_of_data_collection,
                 "$lt": end_of_data_collection,
             },
+        },
+        "port_scans": {
+            "owner": {"$in": orgs},
+            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
         },
         "tickets": {
             "owner": {"$in": orgs},
@@ -359,9 +355,19 @@ def main():
                 "$lt": end_of_data_collection,
             },
         },
+        "vuln_scans": {
+            "owner": {"$in": orgs},
+            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
+        },
     }
 
     scan_collection = {
+        "certs": {
+            "sct_or_not_before": {
+                "$gte": start_of_data_collection,
+                "$lt": end_of_data_collection,
+            }
+        },
         "https_scan": {
             "scan_date": {
                 "$gte": start_of_data_collection,
@@ -376,12 +382,6 @@ def main():
         },
         "trustymail": {
             "scan_date": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
-            }
-        },
-        "certs": {
-            "sct_or_not_before": {
                 "$gte": start_of_data_collection,
                 "$lt": end_of_data_collection,
             }
