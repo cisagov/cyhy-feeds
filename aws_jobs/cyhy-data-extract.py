@@ -367,6 +367,9 @@ def main():
             },
             "projection": default_projection,
         },
+        # The requests collection does not have a field to indicate either
+        # initial creation time or time of last modification. As a result we can
+        # only pull the entire collection every time an extract is run.
         "requests": {
             "query": {},
             "projection": {
@@ -442,6 +445,9 @@ def main():
         },
     }
 
+    # Neither collection in the assessment database have fields that indicate an
+    # initial creation time or time of last modification. As a result we can only
+    # pull the entire collection every time an extract is run.
     assessment_collection = {
         "assessments": {"query": {}, "projection": default_projection},
         "findings": {"query": {}, "projection": default_projection},
