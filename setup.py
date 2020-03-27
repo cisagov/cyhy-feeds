@@ -8,10 +8,13 @@ Based on:
 - https://blog.ionelmc.ro/2014/05/25/python-packaging/#the-structure
 """
 
+# Standard Python Libraries
 from glob import glob
 import io
-from os.path import splitext, basename
-from setuptools import setup, find_packages
+from os.path import basename, splitext
+
+# Third-Party Libraries
+from setuptools import find_packages, setup
 
 
 def readme():
@@ -39,7 +42,6 @@ setup(
     version=package_vars("aws_jobs/_version.py")["__version__"],
     author="Cyber and Infrastructure Security Agency",
     author_email="ncats@hq.dhs.gov",
-    scripts=[],  # TODO
     url="https://www.us-cert.gov/resources/ncats",
     download_url="https://github.com/cisagov/cyhy-feeds",
     license="License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
@@ -60,12 +62,15 @@ setup(
         # that you indicate whether you support Python 2, Python 3 or both.
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
     # What does your project relate to?
     keywords="cyhy",
     packages=find_packages(where="aws_jobs"),
     package_dir={"": "aws_jobs"},
-    package_data={},
     py_modules=[splitext(basename(path))[0] for path in glob("aws_jobs/*.py")],
     include_package_data=True,
     install_requires=[
@@ -74,14 +79,25 @@ setup(
         "docopt >= 0.6.2",
         "mongo-db-from-config @ https://github.com/cisagov/mongo-db-from-config/tarball/develop#egg=mongo-db-from-config",
         "netaddr >= 0.7.10",
-        # Due to an installer issue botocore at present requires dateutil < 2.8.1
-        # Please see https://github.com/boto/botocore/issues/1872 for more
-        # information.
-        "python-dateutil >= 2.2, < 2.8.1",
+        "python-dateutil >= 2.2, < 3.0.0",
         "python-gnupg >= 0.4.3",
         "pytz",
         "requests >= 2.18.4",
         "requests-aws4auth >= 0.9",
     ],
-    extras_require={"test": ["pre-commit", "pytest", "pytest-cov", "coveralls"]},
+    extras_require={
+        "test": [
+            "pre-commit",
+            # coveralls 1.11.0 added a service number for calls from
+            # GitHub Actions. This caused a regression which resulted in a 422
+            # response from the coveralls API with the message:
+            # Unprocessable Entity for url: https://coveralls.io/api/v1/jobs
+            # 1.11.1 fixed this issue, but to ensure expected behavior we'll pin
+            # to never grab the regression version.
+            "coveralls != 1.11.0",
+            "coverage",
+            "pytest-cov",
+            "pytest",
+        ]
+    },
 )

@@ -1,13 +1,13 @@
 """Utility functions to retrieve data from ElasticSearch and DMARC."""
-# standard python libraries
+# Standard Python Libraries
 from datetime import datetime, timedelta
 import logging
 import re
 
-# third-party libraries
-from requests_aws4auth import AWS4Auth
+# Third-Party Libraries
 import boto3
 import requests
+from requests_aws4auth import AWS4Auth
 
 DEFAULT_ES_RETRIEVE_SIZE = 10000
 

@@ -21,11 +21,7 @@ Options:
 
 """
 
-# Attempt to import the Python 3 version, fallback to Python 2 if it fails.
-try:
-    from configparser import SafeConfigParser
-except ImportError:
-    from ConfigParser import SafeConfigParser
+# Standard Python Libraries
 from datetime import datetime
 import json
 import logging
@@ -35,17 +31,25 @@ import sys
 import tarfile
 import time
 
+# Third-Party Libraries
 import boto3
 import bson
+from dateutil.relativedelta import relativedelta
 import dateutil.tz as tz
-from mongo_db_from_config import db_from_config
 from docopt import docopt
 import gnupg  # pip install python-gnupg
 import netaddr
-from dateutil.relativedelta import relativedelta
 from pytz import timezone
 
+# cisagov Libraries
 from dmarc import get_dmarc_data
+from mongo_db_from_config import db_from_config
+
+# Import the appropriate version of SafeConfigParser.
+if sys.version_info.major == 2:
+    from ConfigParser import SafeConfigParser
+else:
+    from configparser import SafeConfigParser
 
 # Logging core variables
 logger = logging.getLogger("cyhy-feeds")
@@ -189,13 +193,15 @@ def cleanup_bucket_files(object_retention_days):
                 )
 
 
-def generate_cursor(collection, query):
+def generate_cursor(collection, parameters):
     """Query collection and return a cursor to be used for data retrieval."""
     # We set no_cursor_timeout so that long retrievals do not cause generated
     # cursors to expire on the MongoDB server. This allows us to generate all cursors
     # up front and then pull results without worrying about a generated cursor
     # timing out on the server.
-    return collection.find(query, {"key": False}, no_cursor_timeout=True)
+    return collection.find(
+        parameters["query"], parameters["projection"], no_cursor_timeout=True
+    )
 
 
 def query_data(collection, cursor, tbz_file, tbz_filename, end_of_data_collection):
@@ -328,63 +334,124 @@ def main():
     else:
         orgs = []
 
+    default_projection = {"key": False}
+
     cyhy_collection = {
         "host_scans": {
-            "owner": {"$in": orgs},
-            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
-        },
-        "port_scans": {
-            "owner": {"$in": orgs},
-            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
-        },
-        "vuln_scans": {
-            "owner": {"$in": orgs},
-            "time": {"$gte": start_of_data_collection, "$lt": end_of_data_collection},
+            "query": {
+                "owner": {"$in": orgs},
+                "time": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
+            },
+            "projection": default_projection,
         },
         "hosts": {
-            "owner": {"$in": orgs},
-            "last_change": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
+            "query": {
+                "owner": {"$in": orgs},
+                "last_change": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
+            },
+            "projection": default_projection,
+        },
+        "port_scans": {
+            "query": {
+                "owner": {"$in": orgs},
+                "time": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
+            },
+            "projection": default_projection,
+        },
+        # The requests collection does not have a field to indicate either
+        # initial creation time or time of last modification. As a result we can
+        # only pull the entire collection every time an extract is run.
+        "requests": {
+            "query": {},
+            "projection": {
+                "agency.acronym": True,
+                "agency.location": True,
+                "agency.name": True,
+                "agency.type": True,
+                "children": True,
+                "report_types": True,
+                "retired": True,
+                "scan_types": True,
+                "stakeholder": True,
             },
         },
         "tickets": {
-            "owner": {"$in": orgs},
-            "last_change": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
+            "query": {
+                "owner": {"$in": orgs},
+                "last_change": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
             },
+            "projection": default_projection,
+        },
+        "vuln_scans": {
+            "query": {
+                "owner": {"$in": orgs},
+                "time": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                },
+            },
+            "projection": default_projection,
         },
     }
 
     scan_collection = {
+        "certs": {
+            "query": {
+                "sct_or_not_before": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                }
+            },
+            "projection": default_projection,
+        },
         "https_scan": {
-            "scan_date": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
-            }
+            "query": {
+                "scan_date": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                }
+            },
+            "projection": default_projection,
         },
         "sslyze_scan": {
-            "scan_date": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
-            }
+            "query": {
+                "scan_date": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                }
+            },
+            "projection": default_projection,
         },
         "trustymail": {
-            "scan_date": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
-            }
-        },
-        "certs": {
-            "sct_or_not_before": {
-                "$gte": start_of_data_collection,
-                "$lt": end_of_data_collection,
-            }
+            "query": {
+                "scan_date": {
+                    "$gte": start_of_data_collection,
+                    "$lt": end_of_data_collection,
+                }
+            },
+            "projection": default_projection,
         },
     }
 
-    assessment_collection = {"assessments": {}, "findings": {}}
+    # Neither collection in the assessment database have fields that indicate an
+    # initial creation time or time of last modification. As a result we can only
+    # pull the entire collection every time an extract is run.
+    assessment_collection = {
+        "assessments": {"query": {}, "projection": default_projection},
+        "findings": {"query": {}, "projection": default_projection},
+    }
 
     # Get cursors for the results of our queries. Create a tuple of the collection
     # name and the generated cursor to later iterate over for data retrieval. We
