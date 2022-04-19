@@ -388,6 +388,7 @@ def main():
                 "agency.name": True,
                 "agency.type": True,
                 "children": True,
+                "networks": True,
                 "report_types": True,
                 "retired": True,
                 "scan_types": True,
