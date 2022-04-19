@@ -360,6 +360,13 @@ def main():
             },
             "projection": default_projection,
         },
+        # The kevs collection does not have a field to indicate either
+        # initial creation time or time of last modification. As a result we can
+        # only pull the entire collection every time an extract is run.
+        "kevs": {
+            "query": {},
+            "projection": default_projection,
+        },
         "port_scans": {
             "query": {
                 "owner": {"$in": orgs},
