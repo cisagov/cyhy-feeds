@@ -211,7 +211,8 @@ def query_data(collection, cursor, tbz_file, tbz_filename, end_of_data_collectio
     logger.info("Fetching from {} collection...".format(collection))
 
     json_filename = "{}_{!s}.json".format(
-        collection, end_of_data_collection.isoformat().replace(":", "").split(".")[0],
+        collection,
+        end_of_data_collection.isoformat().replace(":", "").split(".")[0],
     )
 
     # The previous method converted all documents retrieved into a JSON string at
@@ -497,7 +498,11 @@ def main():
     logger.info("Extracting data from database(s).")
     for collection, cursor in cursor_list:
         query_data(
-            collection, cursor, tbz_file, tbz_filename, end_of_data_collection,
+            collection,
+            cursor,
+            tbz_file,
+            tbz_filename,
+            end_of_data_collection,
         )
         # Just to be safe we manually close the cursor.
         cursor.close()
