@@ -157,28 +157,28 @@ residing on AWS using the runtime configuration in `cyhy-data-retriever.cfg`.
 
 ### Extract Config File Parameters ###
 
-* `FED_ORGS_EXCLUDED` - Orgs to exclude from extract
-* `GNUPG_HOME` - Location of GNUPG database (eg. /Users/bob/.gnupg)
-* `RECIPIENTS` - Names on the gpg public key(s)
-* `SIGNER` - Gpg signer to ensure integrity
-* `SIGNER_PASSPHRASE` - Passphrase for signer gpg key
-* `OUTPUT_DIR` - Directory to output extract to
-* `FILE_RETENTION_NUM_DAYS` - Number of days to hold extract
-* `ES_AWS_CONFIG_SECTION_NAME` - Name of the AWS config file section
+- `FED_ORGS_EXCLUDED` - Orgs to exclude from extract
+- `GNUPG_HOME` - Location of GNUPG database (eg. /Users/bob/.gnupg)
+- `RECIPIENTS` - Names on the gpg public key(s)
+- `SIGNER` - Gpg signer to ensure integrity
+- `SIGNER_PASSPHRASE` - Passphrase for signer gpg key
+- `OUTPUT_DIR` - Directory to output extract to
+- `FILE_RETENTION_NUM_DAYS` - Number of days to hold extract
+- `ES_AWS_CONFIG_SECTION_NAME` - Name of the AWS config file section
   containing the configuration to be used when accessing the
   Elasticsearch data
-* `ES_REGION` - Region for DMARC bucket
-* `ES_URL` - Elasticsearch URL
-* `ES_RETRIEVE_SIZE` - Elasticsearch size
+- `ES_REGION` - Region for DMARC bucket
+- `ES_URL` - Elasticsearch URL
+- `ES_RETRIEVE_SIZE` - Elasticsearch size
 
 ### Retriever Config File Parameters ###
 
-* `CLIENT_PRIVATE_KEY_FILE` - Path to gpg private key
-* `GNUPG_HOME` - Location of GPG database (eg. /Users/bob/.gnupg)
-* `GPG_DECRYPTION_PASSPHRASE` - Passphrase for private gpg key
-* `AWS_ACCESS_KEY_ID` - User ID used for AWS S3 bucket read access
-* `AWS_SECRET_ACCESS_KEY` - Key for AWS S3 bucket read access
-* `PROXY_CONFIG` - Only needed when proxy is present
+- `CLIENT_PRIVATE_KEY_FILE` - Path to gpg private key
+- `GNUPG_HOME` - Location of GPG database (eg. /Users/bob/.gnupg)
+- `GPG_DECRYPTION_PASSPHRASE` - Passphrase for private gpg key
+- `AWS_ACCESS_KEY_ID` - User ID used for AWS S3 bucket read access
+- `AWS_SECRET_ACCESS_KEY` - Key for AWS S3 bucket read access
+- `PROXY_CONFIG` - Only needed when proxy is present
 
 ## Contributing ##
 
