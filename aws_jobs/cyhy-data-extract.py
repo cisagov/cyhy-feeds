@@ -47,8 +47,10 @@ from mongo_db_from_config import db_from_config
 
 # Import the appropriate version of SafeConfigParser.
 if sys.version_info.major == 2:
+    # Third-Party Libraries
     from ConfigParser import SafeConfigParser
 else:
+    # Standard Python Libraries
     from configparser import SafeConfigParser
 
 # Logging core variables
