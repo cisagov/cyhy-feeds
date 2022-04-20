@@ -36,7 +36,7 @@ import gnupg
 
 # Import the appropriate version of SafeConfigParser.
 if sys.version_info.major == 2:
-    # Third-Party Libraries
+    # Standard Python Libraries
     from ConfigParser import SafeConfigParser
 else:
     # Standard Python Libraries
