@@ -154,8 +154,8 @@ jobs:
           COVERALLS_PARALLEL: true
           COVERALLS_SERVICE_NAME: github
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # Skip this step for python 2.7 because coveralls uploads
-        # are no longer unsupported
+        # Skip this step for Python 2.7 because coveralls uploads
+        # are no longer supported
         if: ${{ (matrix.python-version != '2.7') && success() }}
       - name: Setup tmate debug session
         uses: mxschmitt/action-tmate@v3
