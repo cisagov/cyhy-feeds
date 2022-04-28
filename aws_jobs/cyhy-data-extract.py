@@ -47,8 +47,10 @@ from mongo_db_from_config import db_from_config
 
 # Import the appropriate version of SafeConfigParser.
 if sys.version_info.major == 2:
+    # Standard Python Libraries
     from ConfigParser import SafeConfigParser
 else:
+    # Standard Python Libraries
     from configparser import SafeConfigParser
 
 # Logging core variables
@@ -209,7 +211,8 @@ def query_data(collection, cursor, tbz_file, tbz_filename, end_of_data_collectio
     logger.info("Fetching from {} collection...".format(collection))
 
     json_filename = "{}_{!s}.json".format(
-        collection, end_of_data_collection.isoformat().replace(":", "").split(".")[0],
+        collection,
+        end_of_data_collection.isoformat().replace(":", "").split(".")[0],
     )
 
     # The previous method converted all documents retrieved into a JSON string at
@@ -357,6 +360,13 @@ def main():
             },
             "projection": default_projection,
         },
+        # The kevs collection does not have a field to indicate either
+        # initial creation time or time of last modification. As a result we can
+        # only pull the entire collection every time an extract is run.
+        "kevs": {
+            "query": {},
+            "projection": default_projection,
+        },
         "port_scans": {
             "query": {
                 "owner": {"$in": orgs},
@@ -378,6 +388,7 @@ def main():
                 "agency.name": True,
                 "agency.type": True,
                 "children": True,
+                "networks": True,
                 "report_types": True,
                 "retired": True,
                 "scan_types": True,
@@ -495,7 +506,11 @@ def main():
     logger.info("Extracting data from database(s).")
     for collection, cursor in cursor_list:
         query_data(
-            collection, cursor, tbz_file, tbz_filename, end_of_data_collection,
+            collection,
+            cursor,
+            tbz_file,
+            tbz_filename,
+            end_of_data_collection,
         )
         # Just to be safe we manually close the cursor.
         cursor.close()
