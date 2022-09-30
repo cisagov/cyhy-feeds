@@ -21,6 +21,7 @@ Options:
 """
 
 # Standard Python Libraries
+from configparser import SafeConfigParser
 from datetime import datetime
 import re
 import sys
@@ -33,15 +34,6 @@ from dateutil.relativedelta import relativedelta
 import dateutil.tz as tz
 from docopt import docopt
 import gnupg
-
-# Import the appropriate version of SafeConfigParser.
-if sys.version_info.major == 2:
-    # Standard Python Libraries
-    from ConfigParser import SafeConfigParser
-else:
-    # Standard Python Libraries
-    from configparser import SafeConfigParser
-
 
 BUCKET_NAME = "ncats-moe-data"
 DOMAIN = "ncats-moe-data"

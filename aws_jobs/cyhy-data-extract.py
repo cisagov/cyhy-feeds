@@ -22,6 +22,7 @@ Options:
 """
 
 # Standard Python Libraries
+from configparser import SafeConfigParser
 from datetime import datetime
 import json
 import logging
@@ -44,14 +45,6 @@ from pytz import timezone
 # cisagov Libraries
 from dmarc import get_dmarc_data
 from mongo_db_from_config import db_from_config
-
-# Import the appropriate version of SafeConfigParser.
-if sys.version_info.major == 2:
-    # Standard Python Libraries
-    from ConfigParser import SafeConfigParser
-else:
-    # Standard Python Libraries
-    from configparser import SafeConfigParser
 
 # Logging core variables
 logger = logging.getLogger("cyhy-feeds")
