@@ -43,7 +43,7 @@ def main():
     """Process a provided file to decrypt and extract the contents of a cyhy-data-extract run."""
     global __doc__
     __doc__ = re.sub("COMMAND_NAME", __file__, __doc__)
-    args = docopt(__doc__, version="v0.0.1")
+    args = docopt(__doc__, version="0.0.5-rc.1")
     now = datetime.now(tz.tzutc())
 
     # Read parameters in from config file

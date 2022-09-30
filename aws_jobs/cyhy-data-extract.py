@@ -240,7 +240,7 @@ def main():
     """Retrieve data, aggreate into a compressed archive, and encrypt it to store or upload to S3."""
     global __doc__
     __doc__ = __doc__.replace("COMMAND_NAME", __file__)
-    args = docopt(__doc__, version="v0.0.1")
+    args = docopt(__doc__, version="0.0.5-rc.1")
 
     setup_logging(args["--debug"])
 
