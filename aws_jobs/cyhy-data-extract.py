@@ -306,7 +306,15 @@ def main():
     else:
         end_of_data_collection = flatten_datetime(now)
 
-    start_of_data_collection = end_of_data_collection + relativedelta(days=-1)
+    # Capture the past 26 hours of data in order to include up to 2 hours of
+    # data that is saved to the database after the start of this script (which
+    # is run daily). We have seen cases where data was scanned 1 hour prior to
+    # the start of the script, yet it was not saved to the database until after
+    # the script started, so it was excluded from the daily extract files.  We
+    # chose 2 extra hours just to be safe. Although this means consecutive daily
+    # extracts can have some duplicated data, that is preferable to missing
+    # data.
+    start_of_data_collection = end_of_data_collection + relativedelta(hours=-26)
 
     logger.debug(
         "Extracting data from {} to {}.".format(
