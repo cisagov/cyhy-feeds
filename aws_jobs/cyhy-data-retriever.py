@@ -67,7 +67,6 @@ def main():
 
     # Download extract file from s3
     if args["--aws"]:
-
         s3 = boto3.client(
             "s3",
             aws_access_key_id=AWS_ACCESS_KEY_ID,
