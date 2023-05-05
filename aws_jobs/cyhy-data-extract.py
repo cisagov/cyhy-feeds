@@ -22,7 +22,7 @@ Options:
 """
 
 # Standard Python Libraries
-from configparser import SafeConfigParser
+from configparser import ConfigParser
 from datetime import datetime
 import json
 import logging
@@ -266,7 +266,7 @@ def main():
     now = datetime.now(tz.tzutc())
 
     # Read parameters in from config file
-    config = SafeConfigParser()
+    config = ConfigParser()
     config.read([args["--config"]])
     ORGS_EXCLUDED = set(config.get("DEFAULT", "FED_ORGS_EXCLUDED").split(","))
     if ORGS_EXCLUDED == {""}:

@@ -21,7 +21,7 @@ Options:
 """
 
 # Standard Python Libraries
-from configparser import SafeConfigParser
+from configparser import ConfigParser
 from datetime import datetime
 import re
 import sys
@@ -47,7 +47,7 @@ def main():
     now = datetime.now(tz.tzutc())
 
     # Read parameters in from config file
-    config = SafeConfigParser()
+    config = ConfigParser()
     config.read([args["--config"]])
     GNUPG_HOME = config.get("DEFAULT", "GNUPG_HOME")
     GPG_DECRYPTION_PASSPHRASE = config.get("DEFAULT", "GPG_DECRYPTION_PASSPHRASE")
