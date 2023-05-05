@@ -216,14 +216,16 @@ def query_data(collection, cursor, tbz_file, tbz_filename, end_of_data_collectio
     with open(json_filename, "w") as collection_file:
         collection_file.write("[")
 
+        file_position = collection_file.tell()
         for doc in cursor:
             collection_file.write(to_json([doc])[1:-2])
+            file_position = collection_file.tell()
             collection_file.write(",")
 
         if cursor.retrieved != 0:
             # If we output documents then we have a trailing comma, so we need to
-            # roll back the file location by one byte to overwrite as we finish
-            collection_file.seek(-1, os.SEEK_END)
+            # roll back the file location to before the comma to overwrite as we finish
+            collection_file.seek(file_position)
 
         collection_file.write("\n]")
 
