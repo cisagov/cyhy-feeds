@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Create compressed, encrypted, signed extract file with Federal CyHy data for integration with the Weathermap project.
 
 Usage:
@@ -22,6 +22,7 @@ Options:
 """
 
 # Standard Python Libraries
+from configparser import ConfigParser
 from datetime import datetime
 import json
 import logging
@@ -44,14 +45,6 @@ from pytz import timezone
 # cisagov Libraries
 from dmarc import get_dmarc_data
 from mongo_db_from_config import db_from_config
-
-# Import the appropriate version of SafeConfigParser.
-if sys.version_info.major == 2:
-    # Standard Python Libraries
-    from ConfigParser import SafeConfigParser
-else:
-    # Standard Python Libraries
-    from configparser import SafeConfigParser
 
 # Logging core variables
 logger = logging.getLogger("cyhy-feeds")
@@ -223,14 +216,16 @@ def query_data(collection, cursor, tbz_file, tbz_filename, end_of_data_collectio
     with open(json_filename, "w") as collection_file:
         collection_file.write("[")
 
+        file_position = collection_file.tell()
         for doc in cursor:
             collection_file.write(to_json([doc])[1:-2])
+            file_position = collection_file.tell()
             collection_file.write(",")
 
         if cursor.retrieved != 0:
             # If we output documents then we have a trailing comma, so we need to
-            # roll back the file location by one byte to overwrite as we finish
-            collection_file.seek(-1, os.SEEK_END)
+            # roll back the file location to before the comma to overwrite as we finish
+            collection_file.seek(file_position)
 
         collection_file.write("\n]")
 
@@ -247,7 +242,7 @@ def main():
     """Retrieve data, aggreate into a compressed archive, and encrypt it to store or upload to S3."""
     global __doc__
     __doc__ = __doc__.replace("COMMAND_NAME", __file__)
-    args = docopt(__doc__, version="v0.0.1")
+    args = docopt(__doc__, version="0.0.5-rc.1")
 
     setup_logging(args["--debug"])
 
@@ -271,7 +266,7 @@ def main():
     now = datetime.now(tz.tzutc())
 
     # Read parameters in from config file
-    config = SafeConfigParser()
+    config = ConfigParser()
     config.read([args["--config"]])
     ORGS_EXCLUDED = set(config.get("DEFAULT", "FED_ORGS_EXCLUDED").split(","))
     if ORGS_EXCLUDED == {""}:

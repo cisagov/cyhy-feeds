@@ -21,6 +21,7 @@ Options:
 """
 
 # Standard Python Libraries
+from configparser import ConfigParser
 from datetime import datetime
 import re
 import sys
@@ -34,15 +35,6 @@ import dateutil.tz as tz
 from docopt import docopt
 import gnupg
 
-# Import the appropriate version of SafeConfigParser.
-if sys.version_info.major == 2:
-    # Standard Python Libraries
-    from ConfigParser import SafeConfigParser
-else:
-    # Standard Python Libraries
-    from configparser import SafeConfigParser
-
-
 BUCKET_NAME = "ncats-moe-data"
 DOMAIN = "ncats-moe-data"
 
@@ -51,11 +43,11 @@ def main():
     """Process a provided file to decrypt and extract the contents of a cyhy-data-extract run."""
     global __doc__
     __doc__ = re.sub("COMMAND_NAME", __file__, __doc__)
-    args = docopt(__doc__, version="v0.0.1")
+    args = docopt(__doc__, version="0.0.5-rc.1")
     now = datetime.now(tz.tzutc())
 
     # Read parameters in from config file
-    config = SafeConfigParser()
+    config = ConfigParser()
     config.read([args["--config"]])
     GNUPG_HOME = config.get("DEFAULT", "GNUPG_HOME")
     GPG_DECRYPTION_PASSPHRASE = config.get("DEFAULT", "GPG_DECRYPTION_PASSPHRASE")
@@ -75,7 +67,6 @@ def main():
 
     # Download extract file from s3
     if args["--aws"]:
-
         s3 = boto3.client(
             "s3",
             aws_access_key_id=AWS_ACCESS_KEY_ID,

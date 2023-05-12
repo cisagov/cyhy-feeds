@@ -17,11 +17,7 @@ decrypt it, and then decompress it to local storage.
 
 ## Getting Started ##
 
-`cyhy-data-extract` requires **Python 2** because it has not been updated
-to remove all Python 2 requirements. Python 3 is not officially supported
-at this time.
-
-`cyhy-data-retriever` can run as either Python 2 or Python 3.
+Both `cyhy-data-extract` and `cyhy-data-retriever` require Python 3.
 
 To run the tool locally first install the requirements:
 
@@ -62,21 +58,21 @@ Extract CyHy data for the current day using the MongoDB configuration in `cyhy.y
 and the runtime configuration in `cyhy-data-extract.cfg`.
 
 ```console
-python2.7 cyhy-data-extract.py --cyhy-config cyhy.yml --config cyhy-data-extract.cfg
+python3 cyhy-data-extract.py --cyhy-config cyhy.yml --config cyhy-data-extract.cfg
 ```
 
 Extract scan data for the current day using the MongoDB configuration in 'scan.yml'
 and the runtime configuration in `cyhy-data-extract.cfg`.
 
 ```console
-python2.7 cyhy-data-extract.py --scan-config scan.yml --config cyhy-data-extract.cfg
+python3 cyhy-data-extract.py --scan-config scan.yml --config cyhy-data-extract.cfg
 ```
 
 Extract assessment data for the current day using the MongoDB configuration in
 `assessment.yml` and the runtime configuration in `cyhy-data-extract.cfg`.
 
 ```console
-python2.7 cyhy-data-extract.py --assessment-config assessment.yml --config cyhy-data-extract.cfg
+python3 cyhy-data-extract.py --assessment-config assessment.yml --config cyhy-data-extract.cfg
 ```
 
 Extract CyHy and scan data for the current day using the MongoDB configurations
@@ -84,7 +80,7 @@ in `cyhy.yml` and `scan.yml`, respectively, and use the runtime configuration in
 `cyhy-data-extract.cfg`.
 
 ```console
-python2.7 cyhy-data-extract.py --cyhy-config cyhy.yml --scan-config scan.yml
+python3 cyhy-data-extract.py --cyhy-config cyhy.yml --scan-config scan.yml
   --config cyhy-data-extract.cfg
 ```
 
@@ -93,7 +89,7 @@ in `cyhy.yml` and `scan.yml`, upload the results to AWS, and use the runtime
 configuration in `cyhy-data-extract.cfg`.
 
 ```console
-python2.7 cyhy-data-extract.py --cyhy-config cyhy.yml --scan-config scan.yml
+python3 cyhy-data-extract.py --cyhy-config cyhy.yml --scan-config scan.yml
   --aws --config cyhy-data-extract.cfg
 ```
 
@@ -102,7 +98,7 @@ in `cyhy.yml` and `scan.yml`, upload the results to AWS, and use the runtime
 configuration in `cyhy-data-extract.cfg`.
 
 ```console
-python2.7 cyhy-data-extract.py --cyhy-config cyhy.yml --scan-config scan.yml
+python3 cyhy-data-extract.py --cyhy-config cyhy.yml --scan-config scan.yml
   --aws --config cyhy-data-extract.cfg --date 2019-01-25
 ```
 
@@ -111,7 +107,7 @@ configurations in `cyhy.yml`, `scan.yml`, and `assessment.yml`, upload the resul
 to AWS, and use the runtime configuration in `cyhy-data-extract.cfg`.
 
 ```console
-python2.7 cyhy-data-extract.py --cyhy-config cyhy.yml --scan-config scan.yml
+python3 cyhy-data-extract.py --cyhy-config cyhy.yml --scan-config scan.yml
   --assessment-config assessment.yml --aws --config cyhy-data-extract.cfg
   --date 2019-01-25
 ```
