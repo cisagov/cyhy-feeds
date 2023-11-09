@@ -97,7 +97,7 @@ repos:
       - id: bandit
         name: bandit (everything else)
         exclude: tests
-  - repo: https://github.com/psf/black
+  - repo: https://github.com/psf/black-pre-commit-mirror
     rev: 23.1.0
     hooks:
       - id: black
