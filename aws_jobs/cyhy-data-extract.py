@@ -66,13 +66,13 @@ def custom_json_handler(obj):
     """Format a provided JSON object."""
     if hasattr(obj, "isoformat"):
         return obj.isoformat()
-    elif type(obj) == bson.objectid.ObjectId:
+    elif isinstance(obj, bson.objectid.ObjectId):
         return repr(obj)
-    elif type(obj) == netaddr.IPAddress:
+    elif isinstance(obj, netaddr.IPAddress):
         return str(obj)
-    elif type(obj) == netaddr.IPNetwork:
+    elif isinstance(obj, netaddr.IPNetwork):
         return str(obj)
-    elif type(obj) == netaddr.IPSet:
+    elif isinstance(obj, netaddr.IPSet):
         return obj.iter_cidrs()
     else:
         raise TypeError(
