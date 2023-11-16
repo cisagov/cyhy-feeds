@@ -66,13 +66,13 @@ def custom_json_handler(obj):
     """Format a provided JSON object."""
     if hasattr(obj, "isoformat"):
         return obj.isoformat()
-    elif type(obj) == bson.objectid.ObjectId:
+    elif isinstance(obj, bson.objectid.ObjectId):
         return repr(obj)
-    elif type(obj) == netaddr.IPAddress:
+    elif isinstance(obj, netaddr.IPAddress):
         return str(obj)
-    elif type(obj) == netaddr.IPNetwork:
+    elif isinstance(obj, netaddr.IPNetwork):
         return str(obj)
-    elif type(obj) == netaddr.IPSet:
+    elif isinstance(obj, netaddr.IPSet):
         return obj.iter_cidrs()
     else:
         raise TypeError(
@@ -399,13 +399,31 @@ def main():
                 "stakeholder": True,
             },
         },
+        # Pull tickets that were created or modified during the time period.
+        # It's currently possible for a ticket to be created within the time
+        # period, but modified just after the end of the time period, so this
+        # query accounts for that.
         "tickets": {
             "query": {
-                "owner": {"$in": orgs},
-                "last_change": {
-                    "$gte": start_of_data_collection,
-                    "$lt": end_of_data_collection,
-                },
+                "$and": [
+                    {"owner": {"$in": orgs}},
+                    {
+                        "$or": [
+                            {
+                                "last_change": {
+                                    "$gte": start_of_data_collection,
+                                    "$lt": end_of_data_collection,
+                                }
+                            },
+                            {
+                                "time_opened": {
+                                    "$gte": start_of_data_collection,
+                                    "$lt": end_of_data_collection,
+                                }
+                            },
+                        ]
+                    },
+                ]
             },
             "projection": default_projection,
         },

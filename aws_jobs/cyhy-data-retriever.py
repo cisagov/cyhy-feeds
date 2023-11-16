@@ -121,7 +121,8 @@ def main():
         print("Extracting files:")
         for f in tar_membernames:
             print(" {}".format(f))
-        tar.extractall()
+        # B202: https://github.com/PyCQA/bandit/blob/main/bandit/plugins/tarfile_unsafe_members.py
+        tar.extractall()  # nosec B202 - this archive is trusted
         print("Decrypted file {} successfully uncompressed".format(decrypted_filename))
     else:
         print(
