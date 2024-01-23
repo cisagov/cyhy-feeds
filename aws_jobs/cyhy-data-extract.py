@@ -391,6 +391,7 @@ def main():
                 "agency.name": True,
                 "agency.type": True,
                 "children": True,
+                "enrolled": True,
                 "networks": True,
                 "period_start": True,
                 "report_types": True,
