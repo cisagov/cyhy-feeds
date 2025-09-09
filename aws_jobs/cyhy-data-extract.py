@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Create compressed, encrypted, signed extract file with Federal CyHy data for integration with the Weathermap project.
 
 Usage:
@@ -392,6 +391,7 @@ def main():
                 "agency.type": True,
                 "children": True,
                 "enrolled": True,
+                "hostnames": True,
                 "networks": True,
                 "period_start": True,
                 "report_types": True,

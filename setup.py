@@ -104,6 +104,17 @@ setup(
         "setuptools >= 24.2.0",
     ],
     extras_require={
+        # IMPORTANT: Keep type hinting-related dependencies of the dev section
+        # in sync with the mypy pre-commit hook configuration (see
+        # .pre-commit-config.yaml). Any changes to type hinting-related
+        # dependencies here should be reflected in the additional_dependencies
+        # field of the mypy pre-commit hook to avoid discrepancies in type
+        # checking between environments.
+        "dev": [
+            "types-python-dateutil",
+            "types-pytz",
+            "types-requests",
+        ],
         "test": [
             "coverage",
             # coveralls 1.11.0 added a service number for calls from
@@ -116,6 +127,6 @@ setup(
             "pre-commit",
             "pytest-cov",
             "pytest",
-        ]
+        ],
     },
 )

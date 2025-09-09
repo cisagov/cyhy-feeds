@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Retrieve a compressed, encrypted, signed extract file and verify/decrypt/uncompress it.
 
 NOTES:

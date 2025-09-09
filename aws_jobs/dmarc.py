@@ -1,4 +1,5 @@
 """Utility functions to retrieve data from ElasticSearch and DMARC."""
+
 # Standard Python Libraries
 from datetime import datetime, timedelta
 import logging
