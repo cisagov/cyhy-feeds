@@ -88,7 +88,7 @@ def query_elasticsearch(
     scroll_id = None
     logging.debug("Querying Elasticsearch database")
     response = requests.get(
-        "{}/_search?scroll=1m".format(es_url),
+        f"{es_url}/_search?scroll=1m",
         auth=awsauth,
         json=query,
         headers={"Content-Type": "application/json"},
@@ -111,7 +111,7 @@ def query_elasticsearch(
         scroll_json = {"scroll": "1m", "scroll_id": scroll_id}
         logging.debug("Requesting another page of results from Elasticsearch")
         response = requests.get(
-            "{}/_search/scroll".format(es_url_no_index),
+            f"{es_url_no_index}/_search/scroll",
             auth=awsauth,
             json=scroll_json,
             headers={"Content-Type": "application/json"},

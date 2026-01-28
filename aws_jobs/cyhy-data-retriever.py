@@ -75,7 +75,7 @@ def main():
         try:
             s3.download_file(BUCKET_NAME, extract_filename, extract_filename)
         except botocore.exceptions.ClientError as e:
-            print("An Error occured accessing the AWS bucket: {!s}".format(e))
+            print(f"An Error occured accessing the AWS bucket: {e!s}")
 
     # Set filename for decrypted output
     if extract_filename[-4:] == ".gpg":
@@ -119,10 +119,10 @@ def main():
     if tar_membernames:
         print("Extracting files:")
         for f in tar_membernames:
-            print(" {}".format(f))
+            print(f" {f}")
         # B202: https://github.com/PyCQA/bandit/blob/main/bandit/plugins/tarfile_unsafe_members.py
         tar.extractall()  # nosec B202 - this archive is trusted
-        print("Decrypted file {} successfully uncompressed".format(decrypted_filename))
+        print(f"Decrypted file {decrypted_filename} successfully uncompressed")
     else:
         print(
             "\nFAILURE - ERROR UNCOMPRESSING!\n Expected .tbz file; Invalid tar data found in {}".format(
