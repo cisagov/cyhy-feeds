@@ -166,6 +166,9 @@ repos:
           - types-pytz
           - types-requests
           - types-setuptools
+        # We get some goofy mypy errors about mismatched types with
+        # extras_require and project_urls, so just skip this file.
+        exclude: setup.py
   - repo: https://github.com/pypa/pip-audit
     rev: v2.8.0
     hooks:
