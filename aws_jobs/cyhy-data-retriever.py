@@ -75,7 +75,7 @@ def main():
         try:
             s3.download_file(BUCKET_NAME, extract_filename, extract_filename)
         except botocore.exceptions.ClientError as e:
-            print(f"An Error occured accessing the AWS bucket: {e!s}")
+            print(f"An error occurred accessing the AWS bucket: {e!s}")
 
     # Set filename for decrypted output
     if extract_filename[-4:] == ".gpg":
