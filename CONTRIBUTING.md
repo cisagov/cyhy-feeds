@@ -15,7 +15,7 @@ all of which should be in this repository.
 
 If you want to report a bug or request a new feature, the most direct
 method is to [create an
-issue](https://github.com/cisagov/skeleton-python-library/issues) in
+issue](https://github.com/cisagov/cyhy-feeds/issues) in
 this repository.  We recommend that you first search through existing
 issues (both open and closed) to check if your particular issue has
 already been reported.  If it has then you might want to add a comment
@@ -25,7 +25,7 @@ one.
 ## Pull requests ##
 
 If you choose to [submit a pull
-request](https://github.com/cisagov/skeleton-python-library/pulls),
+request](https://github.com/cisagov/cyhy-feeds/pulls),
 you will notice that our continuous integration (CI) system runs a
 fairly extensive set of linters, syntax checkers, system, and unit tests.
 Your pull request may fail these checks, and that's OK.  If you want
@@ -46,35 +46,82 @@ There are a few ways to do this, but we prefer to use
 create and manage a Python virtual environment specific to this
 project.
 
-#### Installing and using `pyenv` and `pyenv-virtualenv` ####
+We recommend using the `setup-env` script located in this repository,
+as it automates the entire environment configuration process. The
+dependencies required to run this script are
+[GNU `getopt`](https://github.com/util-linux/util-linux/blob/master/misc-utils/getopt.1.adoc),
+[`pyenv`](https://github.com/pyenv/pyenv), and [`pyenv-virtualenv`](https://github.com/pyenv/pyenv-virtualenv).
+If these tools are already configured on your system, you can simply run the
+following command:
 
-On the Mac, installation is as simple as `brew install pyenv
-pyenv-virtualenv` and adding this to your profile:
+```console
+./setup-env
+```
+
+Otherwise, follow the steps below to manually configure your
+environment.
+
+#### Installing and using GNU `getopt`, `pyenv`, and `pyenv-virtualenv` ####
+
+On macOS, we recommend installing [brew](https://brew.sh/).  Then
+installation is as simple as `brew install gnu-getopt pyenv pyenv-virtualenv` and
+adding this to your profile:
 
 ```bash
+# GNU getopt must be explicitly added to the path since it is
+# keg-only (https://docs.brew.sh/FAQ#what-does-keg-only-mean)
+export PATH="$(brew --prefix)/opt/gnu-getopt/bin:$PATH"
+
+# Setup pyenv
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 ```
 
-For Linux, Windows Subsystem for Linux (WSL), or on the Mac (if you
+For Linux, Windows Subsystem for Linux (WSL), or macOS (if you
 don't want to use `brew`) you can use
 [pyenv/pyenv-installer](https://github.com/pyenv/pyenv-installer) to
 install the necessary tools. Before running this ensure that you have
 installed the prerequisites for your platform according to the
 [`pyenv` wiki
 page](https://github.com/pyenv/pyenv/wiki/common-build-problems).
+GNU `getopt` is included in most Linux distributions as part of the
+[`util-linux`](https://github.com/util-linux/util-linux) package.
 
 On WSL you should treat your platform as whatever Linux distribution
 you've chosen to install.
 
 Once you have installed `pyenv` you will need to add the following
-lines to your `.bashrc`:
+lines to your `.bash_profile` (or `.profile`):
 
 ```bash
-export PATH="$PATH:$HOME/.pyenv/bin"
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
+```
+
+and then add the following lines to your `.bashrc`:
+
+```bash
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 ```
+
+If you want more information about setting up `pyenv` once installed, please run
+
+```console
+pyenv init
+```
+
+and
+
+```console
+pyenv virtualenv-init
+```
+
+for the current configuration instructions.
 
 If you are using a shell other than `bash` you should follow the
 instructions that the `pyenv-installer` script outputs.
@@ -85,11 +132,10 @@ you can begin to use `pyenv`.
 For a list of Python versions that are already installed and ready to
 use with `pyenv`, use the command `pyenv versions`.  To see a list of
 the Python versions available to be installed and used with `pyenv`
-use the command `pyenv install --list`.  You can read more
-[here](https://github.com/pyenv/pyenv/blob/master/COMMANDS.md) about
-the many things that `pyenv` can do.  See
-[here](https://github.com/pyenv/pyenv-virtualenv#usage) for the
-additional capabilities that pyenv-virtualenv adds to the `pyenv`
+use the command `pyenv install --list`.  You can read more about
+the [many things that `pyenv` can do](https://github.com/pyenv/pyenv/blob/master/COMMANDS.md).
+See the [usage information](https://github.com/pyenv/pyenv-virtualenv#usage)
+for the additional capabilities that pyenv-virtualenv adds to the `pyenv`
 command.
 
 #### Creating the Python virtual environment ####
@@ -99,9 +145,9 @@ can create and configure the Python virtual environment with these
 commands:
 
 ```console
-cd skeleton-python-library
-pyenv virtualenv <python_version_to_use> skeleton-python-library
-pyenv local skeleton-python-library
+cd cyhy-feeds
+pyenv virtualenv <python_version_to_use> cyhy-feeds
+pyenv local cyhy-feeds
 pip install --requirement requirements-dev.txt
 ```
 

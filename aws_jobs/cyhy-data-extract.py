@@ -122,7 +122,7 @@ def update_bucket(bucket_name, local_file, remote_file_name):
 def create_dummy_files(output_dir):
     """Create dummy files to test cleanup_old_files."""
     for n in range(1, 21):
-        dummy_filename = "dummy_file_{!s}.gpg".format(n)
+        dummy_filename = f"dummy_file_{n!s}.gpg"
         full_path_dummy_filename = os.path.join(output_dir, dummy_filename)
         # Use open to create files.
         with open(full_path_dummy_filename, "w"):
@@ -200,7 +200,7 @@ def generate_cursor(collection, parameters):
 
 def query_data(collection, cursor, tbz_file, tbz_filename, end_of_data_collection):
     """Query collection for data matching query and add it to tbz_file."""
-    logger.info("Fetching from {} collection...".format(collection))
+    logger.info(f"Fetching from {collection} collection...")
 
     json_filename = "{}_{!s}.json".format(
         collection,
@@ -228,13 +228,13 @@ def query_data(collection, cursor, tbz_file, tbz_filename, end_of_data_collectio
 
         collection_file.write("\n]")
 
-    logger.info("Finished writing {} to file.".format(collection))
+    logger.info(f"Finished writing {collection} to file.")
     tbz_file.add(json_filename)
-    logger.info("Added {} to {}".format(json_filename, tbz_filename))
+    logger.info(f"Added {json_filename} to {tbz_filename}")
     # Delete file once added to tar
     if os.path.exists(json_filename):
         os.remove(json_filename)
-        logger.info("Deleted {} as part of cleanup.".format(json_filename))
+        logger.info(f"Deleted {json_filename} as part of cleanup.")
 
 
 def main():
@@ -284,7 +284,7 @@ def main():
 
     # Check if OUTPUT_DIR exists; if not, bail out
     if not os.path.exists(OUTPUT_DIR):
-        logger.error("Output directory '{}' does not exist.".format(OUTPUT_DIR))
+        logger.error(f"Output directory '{OUTPUT_DIR}' does not exist.")
         sys.exit(1)
 
     # Set up GPG (used for encrypting and signing)
@@ -495,7 +495,7 @@ def main():
     cursor_list = []
     if args["--cyhy-config"]:
         for collection in cyhy_collection:
-            logger.debug("Generating cursor for {}.{}".format(cyhy_db.name, collection))
+            logger.debug(f"Generating cursor for {cyhy_db.name}.{collection}")
             cursor_list.append(
                 (
                     cyhy_db[collection].name,
@@ -504,7 +504,7 @@ def main():
             )
     if args["--scan-config"]:
         for collection in scan_collection:
-            logger.debug("Generating cursor for {}.{}".format(scan_db.name, collection))
+            logger.debug(f"Generating cursor for {scan_db.name}.{collection}")
             cursor_list.append(
                 (
                     scan_db[collection].name,
@@ -513,9 +513,7 @@ def main():
             )
     if args["--assessment-config"]:
         for collection in assessment_collection:
-            logger.debug(
-                "Generating cursor for {}.{}".format(assessment_db.name, collection)
-            )
+            logger.debug(f"Generating cursor for {assessment_db.name}.{collection}")
             cursor_list.append(
                 (
                     assessment_db[collection].name,
@@ -558,7 +556,7 @@ def main():
     tbz_file.close()
     if os.path.exists(json_filename):
         os.remove(json_filename)
-        logger.info("Deleted {} as part of cleanup.".format(json_filename))
+        logger.info(f"Deleted {json_filename} as part of cleanup.")
 
     gpg_file_name = tbz_filename + ".gpg"
     gpg_full_path_filename = os.path.join(OUTPUT_DIR, gpg_file_name)
@@ -575,7 +573,7 @@ def main():
         )
 
     if not status.ok:
-        logger.error("GPG Error {} :: {}".format(status.status, status.stderr))
+        logger.error(f"GPG Error {status.status} :: {status.stderr}")
         sys.exit(1)
 
     logger.info(
@@ -591,7 +589,7 @@ def main():
 
     if os.path.exists(tbz_filename):
         os.remove(tbz_filename)
-        logger.info("Deleted {} as part of cleanup.".format(tbz_filename))
+        logger.info(f"Deleted {tbz_filename} as part of cleanup.")
 
     cleanup_old_files(OUTPUT_DIR, FILE_RETENTION_NUM_DAYS)
 
